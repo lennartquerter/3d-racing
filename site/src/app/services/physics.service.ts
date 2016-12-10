@@ -51,23 +51,20 @@ export class PhysicsService {
 
 
 
-            if (playerBB.min.y > groundBB.max.y) {
-                //todo, also when under the track , keep falling
-                player.position.y -= this.gravity;
-            }
-            if (playerBB.min.x < groundBB.min.x) {
-                player.position.y -= this.gravity;
-            }
-            if (playerBB.max.x > groundBB.max.x) {
-                player.position.y -= this.gravity;
-            }
+            // if (playerBB.min.y > groundBB.max.y) {
+            //     //todo, also when under the track , keep falling
+            //     player.position.y -= this.gravity;
+            // }
+            // if (playerBB.min.x < groundBB.min.x) {
+            //     player.position.y -= this.gravity;
+            // }
+            // if (playerBB.max.x > groundBB.max.x) {
+            //     player.position.y -= this.gravity;
+            // }
             if (playerBB.min.y < this.deathBB.max.y) {
                 death = true;
             }
         });
-
-        debugger;
-
         return death;
     }
 
