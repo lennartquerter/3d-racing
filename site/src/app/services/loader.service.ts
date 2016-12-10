@@ -15,12 +15,9 @@ export class LoaderService {
 
         return new Promise((resolve, reject) => {
             loader.load(path, (object : any) => {
-                console.log(object);
                 object.traverse( function ( child :any ) {
                     if ( child instanceof THREE.Mesh ) {
-                        console.log('instance');
                         child.material.map = texture;
-
                     }
                 });
                 resolve(object);

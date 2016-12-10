@@ -1,5 +1,5 @@
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
-import {CarComponent} from "./car/car.component";
+import {UpdateService} from "./services/update.service";
 import {IKeyPress} from "./interface";
 import {LightComponent} from "./light/light.component";
 import {SkyboxComponent} from "./skybox/skybox.component";
@@ -8,7 +8,7 @@ import {LoaderService} from "./services/loader.service";
 @Component({
     selector: 'app',
     templateUrl: './app.component.html',
-    providers : [CarComponent, LightComponent, SkyboxComponent, LoaderService]
+    providers : [UpdateService, LightComponent, SkyboxComponent, LoaderService]
 })
 export class AppComponent {
 
@@ -52,7 +52,7 @@ export class AppComponent {
         this.onKeyPress(event, false);
     }
 
-    constructor(private _carComponent: CarComponent,
+    constructor(private _updateService: UpdateService,
                 private _lightComponent: LightComponent,
                 private _loader: LoaderService,
                 private _skyboxComponent: SkyboxComponent) {
@@ -60,8 +60,6 @@ export class AppComponent {
     }
 
     ngOnInit() {
-
-
         const bike = require("../../assets/objects/bike_lennart.obj");
         this._loader.loadOBJ(bike).then(
             (res) => this.car = res
@@ -72,13 +70,15 @@ export class AppComponent {
         );
         this.light = this._lightComponent.init();
         this.pointLight = this._lightComponent.addPointLight();
-        this.skyBox = this._skyboxComponent.init();
+        this._skyboxComponent.init().then(
+            (res) => this.skyBox = res
+        );
 
-       setTimeout(() => this.start(), 5000);
+       setTimeout(() => this.start(), 2000);
     }
 
     start() {
-        this.camera.position.z = 600;
+        this.camera.position.z = 800;
         this.camera.position.y = 200;
         this.skyBox.position.copy(this.camera.position);
         this.pointLight.position.copy(this.camera.position);
@@ -89,6 +89,8 @@ export class AppComponent {
         this.scene.add( this.skyBox );
         this.renderer.setSize(1280, 720);
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
+        console.log(this.car);
+        console.log(this.camera);
         setTimeout(() => this.animate(), 1000)
     }
 
@@ -120,8 +122,8 @@ export class AppComponent {
 
 
     draw() {
-        this.gui.speed = this._carComponent.move(this.car, this.camera,this.keys,this.general.dt);
-        this.skyBox.position.copy(this.camera.position);
+        this.gui.speed = this._updateService.update(this.car, this.camera, this.keys, this.general.dt);
+        this.skyBox.position.copy(this.car.position);
         this.renderer.render(this.scene, this.camera);
     }
 }
