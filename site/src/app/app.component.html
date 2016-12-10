@@ -1,0 +1,6 @@
+<div #canvas class="main" (mousemove)="mouseMovement($event)" (keydown)="onKeyDown($event)">
+    <div class="gui">
+        <progress class="speed-progress" max="400" [value]="gui.speed * 100"></progress>
+        <i class="speed">{{(gui.speed * 100).toFixed(0)}} km/h</i>
+    </div>
+</div>
