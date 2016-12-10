@@ -74,7 +74,7 @@ export class AppComponent {
         this.pointLight = this._lightComponent.addPointLight();
         this.skyBox = this._skyboxComponent.init();
 
-       setTimeout(() => this.start(), 1000)
+       setTimeout(() => this.start(), 5000);
     }
 
     start() {
