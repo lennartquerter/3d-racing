@@ -70,7 +70,7 @@ export class UpdateService {
         camera.position.x -= this.direction.X;
         camera.position.y -= this.direction.Y;
 
-        camera.position.y = 200;
+        camera.position.y = car.position.y + 200;
 
         return this.acceleration;
     }
