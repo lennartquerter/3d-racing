@@ -11,27 +11,20 @@ import {LoaderService} from "./services/loader.service";
     providers : [UpdateService, LightComponent, SkyboxComponent, LoaderService]
 })
 export class AppComponent {
-
     gui = {
         speed : 0
+    };
+
+    loaded = {
+        level: false,
+        user: false,
+        skybox: false,
     };
     
     general = {
         dt : 0,
         last : 0,
     };
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 100000);
-
-    // car = this._carComponent.init();
-    car : any;
-    light : any;
-    pointLight : any;
-    skyBox : any;
-    level: any;
-
-    renderer = new THREE.WebGLRenderer();
 
     keys : IKeyPress = {
         UP: false,
@@ -40,7 +33,28 @@ export class AppComponent {
         RIGHT: false
     };
 
+    player : THREE.Object3D;
+    light : THREE.Light;
+    pointLight : THREE.Light;
+    skyBox : THREE.Object3D;
+    level: THREE.Object3D;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 100000);
+    renderer = new THREE.WebGLRenderer();
+
     @ViewChild("canvas") _canvas: ElementRef;
+
+    constructor(private _updateService: UpdateService,
+                private _lightComponent: LightComponent,
+                private _loader: LoaderService,
+                private _skyboxComponent: SkyboxComponent) {
+
+    }
+
+    //***********************
+    //setup key handlers
+    //***********************
 
     @HostListener('document:keydown', ['$event'])
     handleKeyDown(event: KeyboardEvent) {
@@ -50,54 +64,6 @@ export class AppComponent {
     @HostListener('document:keyup', ['$event'])
     handleKeyUp(event: KeyboardEvent) {
         this.onKeyPress(event, false);
-    }
-
-    constructor(private _updateService: UpdateService,
-                private _lightComponent: LightComponent,
-                private _loader: LoaderService,
-                private _skyboxComponent: SkyboxComponent) {
-
-    }
-
-    ngOnInit() {
-        const bike = require("../../assets/objects/bike_lennart.obj");
-        this._loader.loadOBJ(bike).then(
-            (res) => this.car = res
-        );
-        const level = require("../../assets/objects/level_lennart.obj");
-        this._loader.loadOBJ(level).then(
-            (res) => this.level = res
-        );
-        this.light = this._lightComponent.init();
-        this.pointLight = this._lightComponent.addPointLight();
-        this._skyboxComponent.init().then(
-            (res) => this.skyBox = res
-        );
-
-       setTimeout(() => this.start(), 2000);
-    }
-
-    start() {
-        this.camera.position.z = 800;
-        this.camera.position.y = 200;
-        this.skyBox.position.copy(this.camera.position);
-        this.pointLight.position.copy(this.camera.position);
-        this.scene.add( this.car );
-        this.scene.add( this.level );
-        this.scene.add( this.light );
-        this.scene.add( this.pointLight );
-        this.scene.add( this.skyBox );
-        this.renderer.setSize(1280, 720);
-        this._canvas.nativeElement.appendChild(this.renderer.domElement);
-        console.log(this.car);
-        console.log(this.camera);
-        setTimeout(() => this.animate(), 1000)
-    }
-
-    mouseMovement(event: any) {
-        // console.dir(event);
-        // this.camera.rotation.x += this.dt * -event.movementY / 10000;
-        // this.camera.rotation.y += this.dt * -event.movementX / 10000;
     }
 
     onKeyPress(event: any, down:boolean) {
@@ -111,19 +77,100 @@ export class AppComponent {
             this.keys.RIGHT = down;
         }
     }
-    
+
+    //***********************
+    //on component load
+    //***********************
+
+    ngOnInit() {
+        this.light = this._lightComponent.init();
+        this.pointLight = this._lightComponent.addPointLight();
+
+        const player = require("../../assets/objects/bike_lennart.obj");
+        const playerText = require("../../assets/textures/tron.png");
+        this._loader.loadOBJ(player, playerText).then(
+            (res: THREE.Object3D) => {
+                this.player = res;
+                this.handleLoaded("user");
+            }
+        );
+
+        const level = require("../../assets/objects/level_lennart.obj");
+        const levelText = require("../../assets/textures/road.jpg");
+        this._loader.loadOBJ(level, levelText).then(
+            (res: THREE.Object3D) => {
+                this.level = res;
+                // var bbox = new THREE.Box3().setFromObject(this.level);
+                // console.log(bbox);
+                this.handleLoaded("level");
+            }
+        );
+
+        this._skyboxComponent.init().then(
+            (res: THREE.Object3D) => {
+                this.skyBox = res;
+                this.handleLoaded("skybox");
+            }
+        );
+
+    }
+
+    //handles async loading on components
+    handleLoaded(loadType : string) {
+        this.loaded[loadType] = true;
+        let ready = true;
+
+        for (let x in this.loaded) {
+            if (!this.loaded[x]) ready = false;
+        }
+        if (ready) {
+            this.setup();
+        }
+    }
+
+    //***********************
+    //setup
+    //***********************
+
+    setup() {
+        this.setupInitState();
+        this.addObjectsToScene();
+        this._canvas.nativeElement.appendChild(this.renderer.domElement);
+        this.animate()
+    }
+
+    setupInitState() {
+        // this.camera.position.z = 800;
+        // this.camera.position.y = 200;
+        this.skyBox.position.copy(this.camera.position);
+        this.pointLight.position.copy(this.camera.position);
+        this.renderer.setSize(1280, 720);
+    }
+
+    addObjectsToScene() {
+        this.scene.add( this.player );
+        this.scene.add( this.level );
+        this.scene.add( this.light );
+        this.scene.add( this.pointLight );
+        this.scene.add( this.skyBox );
+    }
+
+    //***********************
+    //animations
+    //***********************
+
     animate() {
         const now = new Date().getTime();
         this.general.dt = Math.min(1, (now - this.general.last) / 1000);
         this.general.last = now;
-        this.draw();
+        this.render();
         requestAnimationFrame(() => this.animate());
     }
 
-
-    draw() {
-        this.gui.speed = this._updateService.update(this.car, this.camera, this.keys, this.general.dt);
-        this.skyBox.position.copy(this.car.position);
+    render() {
+        this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
+        //keep skybox around bike
+        this.skyBox.position.copy(this.player.position);
         this.renderer.render(this.scene, this.camera);
     }
 }
