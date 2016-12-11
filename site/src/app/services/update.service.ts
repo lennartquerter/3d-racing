@@ -15,6 +15,10 @@ export class UpdateService {
     public init() {
     }
 
+    public reset() {
+        this.acceleration = 0;
+    }
+
     public update(car :any, camera :any, keys: IKeyPress, dt :number) : number {
         const step = dt * this.generalCarSpeedMultiplier;
         this.direction = {

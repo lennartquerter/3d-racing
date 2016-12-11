@@ -27,6 +27,7 @@ export class AppComponent {
     general = {
         dt : 0,
         last : 0,
+        frame : 0
     };
 
     keys : IKeyPress = {
@@ -137,18 +138,32 @@ export class AppComponent {
         }
     }
 
+    reloadGame() {
+        this.state.dead = false;
+        this.player.position.x = 0;
+        this.player.position.y = 0;
+        this.player.position.z = 0;
+        this.player.rotation.x = 0;
+        this.player.rotation.y = 0;
+        this.player.rotation.z = 0;
+        this.skyBox.position.copy(this.player.position);
+        this.camera.position.copy(this.player.position);
+        this._updateService.reset();
+        this.animate();
+        console.log(this.player.position)
+    }
+
     //***********************
     //setup
     //***********************
-
 
     setup() {
         this.setupInitState();
         this.addObjectsToScene();
         this.addBoundingBoxesToScene();
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
-        this._physicsService.setupGravity(this.scene, 30);
-        this.animate()
+        this._physicsService.setupGravity(this.scene);
+        this.animate();
     }
 
     setupInitState() {
@@ -166,13 +181,6 @@ export class AppComponent {
     }
 
     addBoundingBoxesToScene() {
-
-        // const geometry = new THREE.BoxGeometry( 2500, 1, 65000 );
-        // const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        // const cube = new THREE.Mesh( geometry, material );
-        // cube.position.y = -100;
-        // cube.name = "ground";
-        // this.scene.add( cube );
         //
         // const geometry3 = new THREE.BoxGeometry( 14000, 1, 2500 );
         // const cube3 = new THREE.Mesh( geometry3, material );
@@ -199,6 +207,7 @@ export class AppComponent {
         cube2.position.y = -2000;
         cube2.name = "death";
         this.scene.add( cube2 );
+
     }
 
     //***********************
@@ -209,23 +218,25 @@ export class AppComponent {
         const now = new Date().getTime();
         this.general.dt = Math.min(1, (now - this.general.last) / 1000);
         this.general.last = now;
-        const death = this.render();
-        if (!death) {
+        this.render();
+        if (!this.state.dead) {
+            this.general.frame++;
+            if (this.general.frame > 24) {
+                this.general.frame = 0;
+            }
             requestAnimationFrame(() => this.animate());
         }
     }
 
     render() {
         this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
-        const obj = this._physicsService.GravityCheck(this.player);
+        const obj = this._physicsService.GravityCheck(this.player, this.general.frame);
         if (obj.d) {
             this.state.dead = true;
-            return true;
         }
         this.gui.gravity = obj.g;
         //keep skybox around bike
         this.skyBox.position.copy(this.player.position);
         this.renderer.render(this.scene, this.camera);
-        return false;
     }
 }

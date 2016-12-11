@@ -1,10 +1,11 @@
 import {IGravityCheckReturn, IGravityObject} from "../interface";
+import Vector3 = THREE.Vector3;
 export class PhysicsService {
 
     groundList: THREE.Box3[] = [];
     deathBB: THREE.Box3;
-    gravity: number = 30;
     level: THREE.Mesh;
+    startLine : THREE.Mesh;
     collidableMeshList: THREE.Mesh[] = [];
 
     rays: THREE.Vector3[];
@@ -13,10 +14,7 @@ export class PhysicsService {
     falltime : number = 0.4;
 
 
-    setupGravity(scene: THREE.Scene, gravity?: number) {
-        this.gravity = gravity;
-        let ground;
-        let death;
+    setupGravity(scene: THREE.Scene) {
         for (let x in scene.children) {
             if (scene.children[x].name == 'model') {
                 const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
@@ -27,27 +25,26 @@ export class PhysicsService {
 
             }
             if (scene.children[x].name == 'death') {
-                death = scene.children[x];
-                this.deathBB = new THREE.Box3().setFromObject(death);
-            }
-            if (scene.children[x].name == 'ground') {
-                console.log('added ground');
-                ground = scene.children[x];
-                this.groundList.push(new THREE.Box3().setFromObject(ground))
+                this.deathBB = new THREE.Box3().setFromObject(scene.children[x]);
             }
         }
+
+        const geometry = new THREE.BoxGeometry( 2500, 2500, 1 );
+        const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        this.startLine = new THREE.Mesh( geometry, material );
+        this.startLine.position.z = 1250;
+        // scene.add( this.startLine );
+
     }
 
-    GravityCheck(player: THREE.Object3D): IGravityCheckReturn {
+    GravityCheck(player: THREE.Object3D, frame : number): IGravityCheckReturn {
 
-        let gravity :IGravityObject = {
-            up : false,
+        let gravity: IGravityObject = {
+            up: false,
             down: true,
         };
 
-
         this.caster = new THREE.Raycaster();
-
         this.rays = [
             new THREE.Vector3(0, 0, 1),     //0: forward,
             new THREE.Vector3(0, 0, -1),    //1 : backwards
@@ -70,81 +67,70 @@ export class PhysicsService {
             new THREE.Vector3(0, -1, 1),    //14 : below - forward
             new THREE.Vector3(0, -1, -1),   //15 : below - backward
             new THREE.Vector3(-1, -1, 0),   //16 : below - right
-            new THREE.Vector3(1, -1, 0) ,   //17 : below - left
+            new THREE.Vector3(1, -1, 0),   //17 : below - left
 
             new THREE.Vector3(0, 0, 0)      //18 : none
         ];
-        // Yep, this.rays[i] gives us :
-        // 0 => forward,
-        // 1 => forward-left,
-        // 2 => left,
-        // 3 => down-left
-        // 4 => down
-        // 5 => down-right
-        // 6 => right
-        // 7 => up-right
-        // 8 => above
-        // 9 => below
-        // 10 => above forward
-        // 11 => below forward
 
-        gravity = this.collision(player, gravity);
+        this.collision(player);
 
         let outcome = 0;
-        if (gravity.up) {
-            outcome += this.distance;
+        // console.log(this.distance);
+        // console.log(this.belowDistance);
 
-            this.falltime = 0.4;
+        this.distance = parseFloat(this.distance.toFixed(2));
+        if (this.distance <= 1) {
+            outcome -= this.distance;
+        } else if  (this.distance > 1) {
+            outcome += this.distance;
         }
-        if (gravity.down && !gravity.up) {
-            this.falltime += 0.004;
-            outcome -= 20 * this.falltime;
+        if (this.belowDistance <= 1) {
+            outcome += this.belowDistance;
+        } else if  (this.belowDistance > 1) {
+            outcome -= this.belowDistance;
         }
 
         player.position.y += outcome;
 
         const playerBB = new THREE.Box3().setFromObject(player);
         let death = false;
-
-        // this.makeRect(playerBB);
         if (playerBB.min.y < this.deathBB.max.y) {
             death = true;
         }
         return {d: death, g: player.position.y}
+
     }
 
-    distance : number;
+    distance : number = 0;
+    belowDistance : number = 0;
 
-
-    collision(player: THREE.Object3D, g : IGravityObject) {
-        let collisions, i,
-            distance = 64;
+    collision(player: THREE.Object3D) {
+        let collisions, i, startCollisions,
+            distance = 128;
         let up = false;
         let onlyeOne = true;
-        // console.log(this.level);
         for (i = 0; i < this.rays.length; i += 1) {
             this.caster.set(player.position, this.rays[i]);
-            // Test if we intersect with any obstacle mesh
             collisions = this.caster.intersectObject(this.level);
-            // And disable that direction if we do
             if (collisions.length > 0 && collisions[0].distance <= distance) {
-
                if (i == 8 || i == 9 || i == 11 || i == 10 ||i == 12) {
                    up = true;
                    if (i == 11 || i == 10 ||i == 12) {
                        onlyeOne = false;
-                   } else {
-                       if (i == 8) {
-                           this.distance = collisions[0].distance;
-                       }
+                   } else if (i == 8) {
+                       this.distance = collisions[0].distance;
                    }
-                   // console.log(i);
+               }
+                if (i == 13) {
+                   this.belowDistance = collisions[0].distance;
                }
             }
-        }
-        return {
-            up : !onlyeOne,
-            down: true
+
+            //check for lap completion
+            startCollisions = this.caster.intersectObject(this.startLine);
+            if (startCollisions.length > 0 && startCollisions[0].distance <= distance) {
+                console.log("LAP +++")
+            }
         }
     }
 }
