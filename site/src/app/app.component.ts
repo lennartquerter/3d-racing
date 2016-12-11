@@ -6,6 +6,7 @@ import {SkyboxComponent} from "./skybox/skybox.component";
 import {LoaderService} from "./services/loader.service";
 import {PhysicsService} from "./services/physics.service";
 
+
 @Component({
     selector: 'app',
     templateUrl: './app.component.html',
@@ -13,7 +14,8 @@ import {PhysicsService} from "./services/physics.service";
 })
 export class AppComponent {
     gui = {
-        speed : 0
+        speed : 0,
+        gravity : 0,
     };
 
     loaded = {
@@ -42,9 +44,10 @@ export class AppComponent {
 
     state = {
         dead : false
-    }
+    };
 
-    scene = new THREE.Scene();
+
+    scene: any = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
     renderer = new THREE.WebGLRenderer();
 
@@ -92,7 +95,7 @@ export class AppComponent {
         this.light = this._lightComponent.init();
         this.pointLight = this._lightComponent.addPointLight();
 
-        const player = require("../../assets/objects/bike_lennart.obj");
+        const player = require("../../assets/objects/bike_2.obj");
         const playerText = require("../../assets/textures/tron.png");
         this._loader.loadOBJ(player, playerText).then(
             (res: THREE.Object3D) => {
@@ -102,7 +105,7 @@ export class AppComponent {
             }
         );
 
-        const level = require("../../assets/objects/level_lennart.obj");
+        const level = require("../../assets/objects/level_lennart_2.obj");
         const levelText = require("../../assets/textures/road.jpg");
         this._loader.loadOBJ(level, levelText).then(
             (res: THREE.Object3D) => {
@@ -138,12 +141,13 @@ export class AppComponent {
     //setup
     //***********************
 
+
     setup() {
         this.setupInitState();
         this.addObjectsToScene();
         this.addBoundingBoxesToScene();
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
-        this._physicsService.setupGravity(this.scene, 7.8);
+        this._physicsService.setupGravity(this.scene, 30);
         this.animate()
     }
 
@@ -162,36 +166,37 @@ export class AppComponent {
     }
 
     addBoundingBoxesToScene() {
-        const geometry = new THREE.BoxGeometry( 2500, 1, 65000 );
-        const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        const cube = new THREE.Mesh( geometry, material );
-        cube.position.y = -100;
-        cube.name = "ground";
-        this.scene.add( cube );
 
-        const geometry3 = new THREE.BoxGeometry( 14000, 1, 2500 );
-        const cube3 = new THREE.Mesh( geometry3, material );
-        cube3.position.y = -100;
-        cube3.position.x = -7000;
-        cube3.position.z = -33000;
-        cube3.name = "ground";
-        this.scene.add( cube3 );
-
-
-        const geometry4 = new THREE.BoxGeometry( 20000, 1, 2500 );
-        const cube4 = new THREE.Mesh( geometry4, material );
-        cube4.position.y = 675;
-        cube4.position.x = -16000;
-        cube4.position.z = -33000;
-        cube4.rotation.z = -0.24;
-        cube4.name = "ground";
-        this.scene.add( cube4 );
-
+        // const geometry = new THREE.BoxGeometry( 2500, 1, 65000 );
+        // const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        // const cube = new THREE.Mesh( geometry, material );
+        // cube.position.y = -100;
+        // cube.name = "ground";
+        // this.scene.add( cube );
+        //
+        // const geometry3 = new THREE.BoxGeometry( 14000, 1, 2500 );
+        // const cube3 = new THREE.Mesh( geometry3, material );
+        // cube3.position.y = -100;
+        // cube3.position.x = -7000;
+        // cube3.position.z = -33000;
+        // cube3.name = "ground";
+        // this.scene.add( cube3 );
+        //
+        //
+        // const geometry4 = new THREE.BoxGeometry( 20000, 1, 2500 );
+        // const cube4 = new THREE.Mesh( geometry4, material );
+        // cube4.position.y = 675;
+        // cube4.position.x = -16000;
+        // cube4.position.z = -33000;
+        // cube4.rotation.z = -0.24;
+        // cube4.name = "ground";
+        // this.scene.add( cube4 );
+        //
         const geometry2 = new THREE.BoxGeometry( 60000, 1, 60000 );
         const material2 = new THREE.MeshBasicMaterial();
         material2.visible = false;
         const cube2 = new THREE.Mesh( geometry2, material2 );
-        cube2.position.y = - 1000;
+        cube2.position.y = -2000;
         cube2.name = "death";
         this.scene.add( cube2 );
     }
@@ -212,11 +217,12 @@ export class AppComponent {
 
     render() {
         this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
-        const death = this._physicsService.GravityCheck(this.player);
-        if (death) {
+        const obj = this._physicsService.GravityCheck(this.player);
+        if (obj.d) {
             this.state.dead = true;
             return true;
         }
+        this.gui.gravity = obj.g;
         //keep skybox around bike
         this.skyBox.position.copy(this.player.position);
         this.renderer.render(this.scene, this.camera);

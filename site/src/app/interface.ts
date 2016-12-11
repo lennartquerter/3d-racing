@@ -1,4 +1,5 @@
 
+import {isBoolean} from "util";
 export interface IKeyPress {
     UP: boolean,
     DOWN: boolean,
@@ -13,4 +14,15 @@ export interface ISkyBoxMapping {
     negx: string
     negy: string
     negz: string
+}
+
+export interface IGravityCheckReturn {
+    g : number
+    d : boolean
+}
+
+export interface IGravityObject {
+    up: boolean
+    down : boolean
+
 }

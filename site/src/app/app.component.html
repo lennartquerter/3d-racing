@@ -2,6 +2,7 @@
     <div class="gui">
         <progress class="speed-progress" max="400" [value]="gui.speed * 100"></progress>
         <i class="speed">{{(gui.speed * 100).toFixed(0)}} km/h</i>
+        <i class="gravity">{{(gui.gravity.toFixed(0))}} m</i>
         <h2 [hidden]="!state.dead">YOU DIEDEDEDED</h2>
     </div>
 </div>

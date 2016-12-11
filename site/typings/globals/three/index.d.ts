@@ -1445,6 +1445,8 @@ declare namespace THREE {
          */
         children: Object3D[];
 
+        geometry: any;
+
         /**
          * Up direction.
          */
