@@ -1,6 +1,7 @@
 import {IKeyPress} from "../interface";
 export class UpdateService {
     acceleration: number = 0;
+    maxSpeed : number = 7;
     generalCarSpeedMultiplier: number =  1000;
     direction = {
         X: 0,
@@ -29,13 +30,14 @@ export class UpdateService {
 
         if (this.acceleration > 0) {
             this.acceleration -= 0.0012;
+            if (car.rotation.x > 0.00) car.rotateX(-0.001);
         } else {
             this.acceleration += 0.0012;
         }
+
         if (keys.UP) {
-            if (this.acceleration < 4) {
+            if (this.acceleration < this.maxSpeed) {
                 if (this.acceleration < 0) {
-                    car.rotateX(0.004);
                     this.acceleration += 0.03;
                 } else {
                     this.acceleration += 0.02;
@@ -51,21 +53,22 @@ export class UpdateService {
                 }
             }
         }
+
         if (keys.LEFT) {
             car.rotateY(0.02);
         }
-
         if (keys.RIGHT) {
             car.rotateY(-0.02);
         }
-        camera.quaternion.slerp(car.quaternion, 0.1);
-        if (Math.cos(car.rotation.z) > -1) {
+
+        if (parseInt(Math.cos(car.rotation.z).toFixed(0)) > -1) {
             this.direction.Z = step * this.acceleration * Math.cos(car.rotation.y);
         } else {
             this.direction.Z = step * this.acceleration * -Math.cos(car.rotation.y);
         }
 
         this.direction.X = step * this.acceleration * Math.sin(car.rotation.y);
+
         car.position.z -= this.direction.Z;
         car.position.x -= this.direction.X;
         car.position.y -= this.direction.Y;
@@ -74,7 +77,9 @@ export class UpdateService {
         camera.position.x -= this.direction.X;
         camera.position.y -= this.direction.Y;
 
+        camera.quaternion.slerp(car.quaternion, 0.1);
         camera.position.y = car.position.y + 200;
+
 
         return this.acceleration;
     }

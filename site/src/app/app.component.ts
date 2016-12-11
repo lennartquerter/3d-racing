@@ -1,21 +1,29 @@
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
 import {UpdateService} from "./services/update.service";
-import {IKeyPress} from "./interface";
+import {IKeyPress, IGravityCheckReturn} from "./interface";
 import {LightComponent} from "./light/light.component";
 import {SkyboxComponent} from "./skybox/skybox.component";
 import {LoaderService} from "./services/loader.service";
 import {PhysicsService} from "./services/physics.service";
+import {KeyService} from "./services/key.service";
 
 
 @Component({
     selector: 'app',
     templateUrl: './app.component.html',
-    providers : [UpdateService, LightComponent, SkyboxComponent, LoaderService, PhysicsService]
+    providers : [UpdateService,
+        LightComponent,
+        SkyboxComponent,
+        LoaderService,
+        PhysicsService,
+        KeyService]
 })
 export class AppComponent {
     gui = {
         speed : 0,
         gravity : 0,
+        lapTime : 0
+        // bestLap : 100,
     };
 
     loaded = {
@@ -58,6 +66,7 @@ export class AppComponent {
                 private _lightComponent: LightComponent,
                 private _loader: LoaderService,
                 private _physicsService: PhysicsService,
+                private _keyService: KeyService,
                 private _skyboxComponent: SkyboxComponent) {
 
     }
@@ -68,24 +77,12 @@ export class AppComponent {
 
     @HostListener('document:keydown', ['$event'])
     handleKeyDown(event: KeyboardEvent) {
-        this.onKeyPress(event, true);
+        this.keys = this._keyService.onKeyPress(event, true);
     }
 
     @HostListener('document:keyup', ['$event'])
     handleKeyUp(event: KeyboardEvent) {
-        this.onKeyPress(event, false);
-    }
-
-    onKeyPress(event: any, down:boolean) {
-        if (event.key == 'w' || event.keyCode == 38) {
-            this.keys.UP = down;
-        } else if (event.key == 's' || event.keyCode == 40) {
-            this.keys.DOWN = down;
-        } else if (event.key == 'a' || event.keyCode == 37) {
-            this.keys.LEFT = down;
-        } else if (event.key == 'd' || event.keyCode == 39) {
-            this.keys.RIGHT = down;
-        }
+        this.keys = this._keyService.onKeyPress(event, false);
     }
 
     //***********************
@@ -93,7 +90,11 @@ export class AppComponent {
     //***********************
 
     ngOnInit() {
-        this.light = this._lightComponent.init();
+        this.loader();
+    }
+
+    loader() {
+        this.light = this._lightComponent.addAmbientLight();
         this.pointLight = this._lightComponent.addPointLight();
 
         const player = require("../../assets/objects/bike_2.obj");
@@ -181,25 +182,6 @@ export class AppComponent {
     }
 
     addBoundingBoxesToScene() {
-        //
-        // const geometry3 = new THREE.BoxGeometry( 14000, 1, 2500 );
-        // const cube3 = new THREE.Mesh( geometry3, material );
-        // cube3.position.y = -100;
-        // cube3.position.x = -7000;
-        // cube3.position.z = -33000;
-        // cube3.name = "ground";
-        // this.scene.add( cube3 );
-        //
-        //
-        // const geometry4 = new THREE.BoxGeometry( 20000, 1, 2500 );
-        // const cube4 = new THREE.Mesh( geometry4, material );
-        // cube4.position.y = 675;
-        // cube4.position.x = -16000;
-        // cube4.position.z = -33000;
-        // cube4.rotation.z = -0.24;
-        // cube4.name = "ground";
-        // this.scene.add( cube4 );
-        //
         const geometry2 = new THREE.BoxGeometry( 60000, 1, 60000 );
         const material2 = new THREE.MeshBasicMaterial();
         material2.visible = false;
@@ -207,7 +189,6 @@ export class AppComponent {
         cube2.position.y = -2000;
         cube2.name = "death";
         this.scene.add( cube2 );
-
     }
 
     //***********************
@@ -230,12 +211,16 @@ export class AppComponent {
 
     render() {
         this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
-        const obj = this._physicsService.GravityCheck(this.player, this.general.frame);
+        const obj : IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.general.frame);
         if (obj.d) {
             this.state.dead = true;
         }
+        this.gui.lapTime = obj.lt;
+        // if (this.gui.lapTime < this.gui.bestLap) {
+        //     this.gui.bestLap = this.gui.lapTime;
+        // }
         this.gui.gravity = obj.g;
-        //keep skybox around bike
+        //keep skyBox around bike
         this.skyBox.position.copy(this.player.position);
         this.renderer.render(this.scene, this.camera);
     }

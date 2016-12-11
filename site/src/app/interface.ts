@@ -19,6 +19,7 @@ export interface ISkyBoxMapping {
 export interface IGravityCheckReturn {
     g : number
     d : boolean
+    lt : number
 }
 
 export interface IGravityObject {
