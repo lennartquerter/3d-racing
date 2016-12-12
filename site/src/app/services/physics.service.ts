@@ -73,7 +73,9 @@ export class PhysicsService {
 
     }
 
-    GravityCheck(player: THREE.Object3D, frame : number): IGravityCheckReturn {
+    previousOutcome : number = 0;
+
+    GravityCheck(player: THREE.Object3D, camera : THREE.Camera): IGravityCheckReturn {
         const playerBB = new THREE.Box3().setFromObject(player);
         let death = (playerBB.min.y < this.deathBB.max.y);
         const laptime =  this.checkForCollision(player);
@@ -81,6 +83,8 @@ export class PhysicsService {
 
         this.distanceAbove = parseFloat(this.distanceAbove.toFixed(2));
         this.distanceBelow = parseFloat(this.distanceBelow.toFixed(2));
+
+        //check for distance between the road and object
 
         if (this.distanceAbove <= 1) {
             outcome -= this.distanceAbove * 0.6;
@@ -92,11 +96,23 @@ export class PhysicsService {
         } else if (this.distanceBelow > 1) {
             outcome -= this.distanceBelow * 0.2;
         }
-        //todo: deze nog uitbreiden zodat hij niet shockt
+
         if (!this.intersect) {
+            //g * m / d
             outcome -= (25000 / (player.position.y - this.deathBB.min.y));
         }
+        //change cam dir when going up or down
+        if (this.previousOutcome - player.position.y > 2) {
+            camera.rotateX(-0.01)
+        } else if (this.previousOutcome - player.position.y < -2){
+            camera.rotateX(0.01)
+        }
 
+        this.previousOutcome = player.position.y;
+        //do not go up and down on small changes
+        if (outcome < 1 && outcome > -1) {
+            outcome = 0;
+        }
         player.position.y += outcome;
         return {d: death, g: outcome, lt: laptime}
     }

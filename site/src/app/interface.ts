@@ -27,3 +27,17 @@ export interface IGravityObject {
     down : boolean
 
 }
+
+export interface IPlayerObject {
+    position : IVector
+    rotation : IVector
+    name : string
+    bike : string
+    bikeTexture : string
+}
+
+export interface IVector {
+    x: number
+    y: number
+    z: number
+}

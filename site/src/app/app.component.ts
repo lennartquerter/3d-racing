@@ -1,11 +1,14 @@
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
 import {UpdateService} from "./services/update.service";
-import {IKeyPress, IGravityCheckReturn} from "./interface";
+import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "./interface";
 import {LightComponent} from "./light/light.component";
 import {SkyboxComponent} from "./skybox/skybox.component";
 import {LoaderService} from "./services/loader.service";
 import {PhysicsService} from "./services/physics.service";
 import {KeyService} from "./services/key.service";
+import {MultiplayerService} from "./services/multiplayer.service";
+
+import * as io from "socket.io-client";
 
 
 @Component({
@@ -16,6 +19,7 @@ import {KeyService} from "./services/key.service";
         SkyboxComponent,
         LoaderService,
         PhysicsService,
+        MultiplayerService,
         KeyService]
 })
 export class AppComponent {
@@ -55,6 +59,22 @@ export class AppComponent {
         dead : false
     };
 
+    players : [IPlayerObject] = [{
+        position: {
+            x: 100,
+            y: 0,
+            z: -100
+        },
+        rotation: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        name: 'player01',
+        bike: 'bike01',
+        bikeTexture: 'text01'
+    }];
+
 
     scene: any = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
@@ -67,6 +87,7 @@ export class AppComponent {
                 private _loader: LoaderService,
                 private _physicsService: PhysicsService,
                 private _keyService: KeyService,
+                private _multiplayerService: MultiplayerService,
                 private _skyboxComponent: SkyboxComponent) {
 
     }
@@ -89,8 +110,21 @@ export class AppComponent {
     //on component load
     //***********************
 
+    socket: SocketIOClient.Socket;
+
     ngOnInit() {
-        this.loader();
+        this.socket = io.connect();
+
+        this.socket.on('connect', () => {
+
+            this.socket.on('playerPosition', (player: IPlayerObject) => {
+                console.log('update player');
+                this.players[0] = player
+            });
+        });
+
+        this._multiplayerService.initializePlayers(this.scene, this.players)
+            .then(() => this.loader())
     }
 
     loader() {
@@ -211,14 +245,32 @@ export class AppComponent {
 
     render() {
         this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
-        const obj : IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.general.frame);
+        const obj : IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.camera);
         if (obj.d) {
             this.state.dead = true;
         }
         this.gui.lapTime = obj.lt;
-        // if (this.gui.lapTime < this.gui.bestLap) {
-        //     this.gui.bestLap = this.gui.lapTime;
-        // }
+
+        if (this.general.frame % 4 == 0) {
+            const playerPos :IPlayerObject = {
+                position :{
+                    x: this.player.position.x,
+                    y: this.player.position.y,
+                    z: this.player.position.z
+                },
+                rotation :{
+                    x: this.player.rotation.x,
+                    y: this.player.rotation.y,
+                    z: this.player.rotation.z
+                },
+                name : "player01",
+                bike : 'bike01',
+                bikeTexture : "blue"
+            };
+            this._multiplayerService.updateOtherPlayers(this.players);
+            this.socket.emit('playerPosition', playerPos);
+        }
+
         this.gui.gravity = obj.g;
         //keep skyBox around bike
         this.skyBox.position.copy(this.player.position);
