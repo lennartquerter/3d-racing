@@ -115,9 +115,9 @@ export class AppComponent {
 
     connection : Subscription;
     ngOnInit() {
-        this.connection = this._socketService.getMessages().subscribe(message => {
-            console.log(message);
-        })
+        this.connection = this._socketService.getMessages().subscribe(player => {
+            this.players[0] = player
+        });
 
         this._multiplayerService.initializePlayers(this.scene, this.players)
             .then(() => this.loader())
