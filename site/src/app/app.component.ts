@@ -115,7 +115,7 @@ export class AppComponent {
 
     connection : Subscription;
     ngOnInit() {
-        this.connection = this._socketService.getMessages().subscribe(player => {
+        this.connection = this._socketService.getMessages().subscribe((player : IPlayerObject) => {
             this.players[0] = player
         });
 
