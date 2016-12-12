@@ -18,7 +18,7 @@ export class WebSocketService {
 
     getMessages() {
         let observable = new Observable((observer : any) => {
-            this.socket = io.connect('localhost:9900');
+            this.socket = io.connect();
             this.socket.on('playerPosition', (player: IPlayerObject) => {
                 observer.next(player);
             });
