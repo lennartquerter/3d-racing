@@ -1,3 +1,6 @@
+import {Injectable} from "@angular/core";
+
+@Injectable()
 export class LightComponent {
 
     color: number = 0x404040;

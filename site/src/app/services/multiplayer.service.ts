@@ -1,11 +1,13 @@
 import {IPlayerObject} from "../interface";
 import {LoaderService} from "./loader.service";
 import {Inject} from "@angular/core";
+import {Injectable} from "@angular/core";
+
+@Injectable()
 export class MultiplayerService {
 
     players : any = {};
     loadedPlayers : any = {};
-    playersUpdate : [IPlayerObject];
 
     constructor(@Inject(LoaderService) private _loader: LoaderService) {
 
@@ -26,7 +28,6 @@ export class MultiplayerService {
                 const playerText = require("../../../assets/textures/tron.png");
                 this._loader.loadOBJ(player, playerText).then(
                     (res: THREE.Object3D) => {
-
                         this.players[players[x].name] = res;
                         scene.add(this.players[players[x].name]);
                         const bool = this.handleLoaded(players[x].name);
@@ -37,9 +38,6 @@ export class MultiplayerService {
                 );
             }
         });
-
-
-
     }
 
 
@@ -66,7 +64,4 @@ export class MultiplayerService {
             this.players[players[x].name].rotation.x = players[x].rotation.x;
         }
     }
-
-
-
 }

@@ -1,4 +1,7 @@
 import {IKeyPress} from "../interface";
+import {Injectable} from "@angular/core";
+
+@Injectable()
 export class UpdateService {
     acceleration: number = 0;
     maxSpeed : number = 7;

@@ -1,4 +1,7 @@
 import {IKeyPress} from "../interface";
+import {Injectable} from "@angular/core";
+
+@Injectable()
 export class KeyService {
 
     keys : IKeyPress = {

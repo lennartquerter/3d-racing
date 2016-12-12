@@ -8,7 +8,8 @@ import {PhysicsService} from "./services/physics.service";
 import {KeyService} from "./services/key.service";
 import {MultiplayerService} from "./services/multiplayer.service";
 
-import * as io from "socket.io-client";
+import {WebSocketService} from "./services/webSocket.service";
+import {Subscription} from "rxjs";
 
 
 @Component({
@@ -20,6 +21,7 @@ import * as io from "socket.io-client";
         LoaderService,
         PhysicsService,
         MultiplayerService,
+        WebSocketService,
         KeyService]
 })
 export class AppComponent {
@@ -61,9 +63,9 @@ export class AppComponent {
 
     players : [IPlayerObject] = [{
         position: {
-            x: 100,
+            x: 0,
             y: 0,
-            z: -100
+            z: 0
         },
         rotation: {
             x: 0,
@@ -88,6 +90,7 @@ export class AppComponent {
                 private _physicsService: PhysicsService,
                 private _keyService: KeyService,
                 private _multiplayerService: MultiplayerService,
+                private _socketService: WebSocketService,
                 private _skyboxComponent: SkyboxComponent) {
 
     }
@@ -110,18 +113,11 @@ export class AppComponent {
     //on component load
     //***********************
 
-    socket: SocketIOClient.Socket;
-
+    connection : Subscription;
     ngOnInit() {
-        this.socket = io.connect();
-
-        this.socket.on('connect', () => {
-
-            this.socket.on('playerPosition', (player: IPlayerObject) => {
-                console.log('update player');
-                this.players[0] = player
-            });
-        });
+        this.connection = this._socketService.getMessages().subscribe(message => {
+            console.log(message);
+        })
 
         this._multiplayerService.initializePlayers(this.scene, this.players)
             .then(() => this.loader())
@@ -268,7 +264,7 @@ export class AppComponent {
                 bikeTexture : "blue"
             };
             this._multiplayerService.updateOtherPlayers(this.players);
-            this.socket.emit('playerPosition', playerPos);
+            this._socketService.sendPlayerPosition( playerPos);
         }
 
         this.gui.gravity = obj.g;
