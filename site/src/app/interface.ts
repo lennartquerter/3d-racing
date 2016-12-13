@@ -41,3 +41,9 @@ export interface IVector {
     y: number
     z: number
 }
+
+export interface IGeneralObject {
+    dt: number
+    last: number
+    frame: number
+}

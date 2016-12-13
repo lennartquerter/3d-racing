@@ -14,7 +14,6 @@ export class MultiplayerService {
     }
 
     setLoaderObject(players : [IPlayerObject]) {
-
         for (let x in players) {
             this.loadedPlayers[players[x].name] = false;
         }

@@ -1,4 +1,4 @@
-import {IGravityCheckReturn, IGravityObject} from "../interface";
+import {IGravityCheckReturn} from "../interface";
 import Vector3 = THREE.Vector3;
 const moment = require('moment');
 import {Injectable} from "@angular/core";

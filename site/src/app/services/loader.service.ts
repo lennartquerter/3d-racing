@@ -6,8 +6,6 @@ export class LoaderService {
 
     }
 
-
-
     loadOBJ(path : string, textureFile: string,) {
         const manager = new THREE.LoadingManager();
         manager.onProgress = function ( item, loaded, total ) {
