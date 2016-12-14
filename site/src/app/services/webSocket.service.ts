@@ -8,18 +8,30 @@ export class WebSocketService {
     socket : SocketIOClient.Socket;
 
     constructor() {
+        this.socket = io.connect();
+    }
 
+    ngOnInit() {
+        this.socket.on('connect_error', function() {
+            console.log('Connection failed');
+        });
+        this.socket.on('reconnect_failed', function() {
+            console.log('Reconnection failed');
+        });
     }
 
 
     sendPlayerPosition(position : IPlayerObject) {
-        this.socket.emit('playerPosition', position)
+        return new Promise((resolve, reject) => {
+            this.socket.emit('playerPosition', position,(data :any) => {
+                resolve(data.playerList)
+            })
+        })
     }
 
-    getMessages() : any {
+    getPlayerPositions() : any {
         let observable = new Observable((observer : any) => {
-            this.socket = io.connect();
-            this.socket.on('playerPosition', (player: IPlayerObject) => {
+            this.socket.on('positionUpdate', (player: IPlayerObject[]) => {
                 observer.next(player);
             });
             return () => {
@@ -27,5 +39,40 @@ export class WebSocketService {
             };
         });
         return observable;
+    }
+
+    onDisconnect() : any {
+        let observable = new Observable((observer : any) => {
+            this.socket.on('disconnectedPlayer', (data : any) => {
+                console.log('socket: disconnect');
+                observer.next(data.ID);
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        });
+        return observable;
+    }
+
+    getNewPlayer() : any {
+        let observable = new Observable((observer : any) => {
+            this.socket.on('newPlayer', (player: any) => {
+                observer.next(player.player);
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        });
+        return observable;
+    }
+
+    connectToGame(player : IPlayerObject) : any {
+        return new Promise((resolve, reject) => {
+            this.socket.emit('gameConnect', player,(data :any) => {
+                console.log('got data from gameConnect');
+                resolve(data)
+            })
+        })
+
     }
 }

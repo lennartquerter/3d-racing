@@ -6,7 +6,17 @@ export class LoaderService {
 
     }
 
-    loadOBJ(path : string, textureFile: string,) {
+    loadOBJ(path : string, textureFile: string) {
+
+        if (!path) {
+            console.log("could not get url to bike, using standard bike");
+            path = require("../../../assets/objects/bike_2.obj");
+        }
+
+        if (!textureFile) {
+            console.log("could not get texurefile, using standard tex");
+            textureFile = require("../../../assets/textures/tron-01.jpg");
+        }
         const manager = new THREE.LoadingManager();
         manager.onProgress = function ( item, loaded, total ) {
             console.log( item, loaded, total );

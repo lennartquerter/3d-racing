@@ -55,21 +55,8 @@ export class GameComponent {
         dead : false
     };
 
-    players : [IPlayerObject] = [{
-        position: {
-            x: 0,
-            y: 0,
-            z: 0
-        },
-        rotation: {
-            x: 0,
-            y: 0,
-            z: 0
-        },
-        name: 'player01',
-        bike: 'bike01',
-        bikeTexture: 'text01'
-    }];
+    currentPlayer : IPlayerObject;
+    connectedPlayers : IPlayerObject[] = [];
 
 
     scene: any = new THREE.Scene();
@@ -77,6 +64,9 @@ export class GameComponent {
     renderer = new THREE.WebGLRenderer();
 
     @ViewChild("canvas") _canvas: ElementRef;
+
+    //setup webSocket service;
+    private _socketService: WebSocketService = new WebSocketService();
 
     constructor(private _updateService: UpdateService,
                 private _lightService: LightService,
@@ -86,7 +76,6 @@ export class GameComponent {
                 private _multiplayerService: MultiplayerService,
                 private _animationService: AnimationService,
                 private _player: PlayerService,
-                private _socketService: WebSocketService,
                 private _skyBoxService: SkyBoxService) {
 
     }
@@ -110,26 +99,83 @@ export class GameComponent {
     //***********************
 
     connection : Subscription;
+    newPlayerConnect : Subscription;
     animateSubscription : Subscription;
-    ngOnInit() {
-        this.connection = this._socketService.getMessages().subscribe((player : IPlayerObject) => {
-            this.players[0] = player
-        });
-        this.animateSubscription = this._animationService.animation().subscribe((generalObject : any) => {
-            this.general = generalObject;
-            this.render()
-        });
+    onPlayerdisconnect : Subscription;
 
-        this._multiplayerService.initializePlayers(this.scene, this.players)
-            .then(() => this.loader())
+
+    ngOnInit() {
+        this.setupSubscriptions();
+        this.setupCurrentPlayer();
+
+        //connect to game and load level:
+        this._socketService.connectToGame(this.currentPlayer)
+            .then((res : any) => {
+                this.connectedPlayers = res.playerList;
+                if (this.connectedPlayers.length > 0) {
+                    console.log('there are other players in scene');
+                    this._multiplayerService.initializePlayers(this.scene, this.connectedPlayers)
+                        .then(() => this.loadCurrentGame())
+                } else {
+                    this.loadCurrentGame()
+                }
+            })
     }
 
-    loader() {
+    setupCurrentPlayer() {
+        this.currentPlayer = {
+            ID : 'NULL',
+            position :{
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            rotation :{
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            name : "test2",
+            bike : this._player.getBike(),
+            bikeTexture : this._player.getTexture()
+        };
+    }
+
+    setupSubscriptions() {
+        //returns new player positions
+        this.connection = this._socketService.getPlayerPositions()
+            .subscribe((playerList: [IPlayerObject]) => {
+                console.log('get player pos');
+                this.connectedPlayers = playerList;
+            });
+
+        //returns a trigger when a new player connects
+        this.newPlayerConnect = this._socketService.getNewPlayer()
+            .subscribe((player: IPlayerObject) => {
+                console.log('new Player Connected');
+                this._multiplayerService.startNewPlayer(this.scene, player)
+            });
+
+        //returns a trigger when a new player disconnects
+        this.onPlayerdisconnect = this._socketService.onDisconnect()
+            .subscribe((id: string) => {
+                console.log('PlayerDisconnected');
+                this._multiplayerService.deletePlayer(this.scene, id)
+            });
+
+        //returns a trigger when scene must be updated
+        this.animateSubscription = this._animationService.animation()
+            .subscribe((generalObject: any) => {
+                this.general = generalObject;
+                this.render();
+            });
+    }
+
+    loadCurrentGame() {
         this.light = this._lightService.addAmbientLight(0xddbfbf);
         this.pointLight = this._lightService.addPointLight();
 
-        const player = require("../../../assets/objects/bike_2.obj");
-        this._loader.loadOBJ(player, this._player.getTexture()).then(
+        this._loader.loadOBJ(this.currentPlayer.bike, this.currentPlayer.bikeTexture).then(
             (res: THREE.Object3D) => {
                 res.name = "player";
                 this.player = res;
@@ -138,7 +184,7 @@ export class GameComponent {
         );
 
         const level = require("../../../assets/objects/level_lennart_2.obj");
-        const levelText = require("../../../assets/textures/road.jpg");
+        const levelText = require("../../../assets/textures/tron-02.jpg");
         this._loader.loadOBJ(level, levelText).then(
             (res: THREE.Object3D) => {
                 res.name = "model";
@@ -248,23 +294,19 @@ export class GameComponent {
         this.gui.lapTime = obj.lt;
 
         if (this.general.frame % 4 == 0) {
-            const playerPos :IPlayerObject = {
-                position :{
-                    x: this.player.position.x,
-                    y: this.player.position.y,
-                    z: this.player.position.z
-                },
-                rotation :{
-                    x: this.player.rotation.x,
-                    y: this.player.rotation.y,
-                    z: this.player.rotation.z
-                },
-                name : "player01",
-                bike : 'bike01',
-                bikeTexture : "blue"
-            };
-            this._multiplayerService.updateOtherPlayers(this.players);
-            this._socketService.sendPlayerPosition( playerPos);
+            //update player here
+            this.currentPlayer.position.x = this.player.position.x;
+            this.currentPlayer.position.y = this.player.position.y;
+            this.currentPlayer.position.z = this.player.position.z;
+            this.currentPlayer.rotation.x = this.player.rotation.x;
+            this.currentPlayer.rotation.y = this.player.rotation.y;
+            this.currentPlayer.rotation.z = this.player.rotation.z;
+
+            this._socketService.sendPlayerPosition(this.currentPlayer)
+                .then((data : any) => {
+                    this.connectedPlayers = data;
+                    this._multiplayerService.updateOtherPlayers(this.connectedPlayers)
+                });
         }
 
         this.gui.gravity = obj.g;

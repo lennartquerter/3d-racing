@@ -17,7 +17,6 @@ import { KeyService }               from "./services/key.service";
 import { LoaderService }            from "./services/loader.service";
 import { MultiplayerService }       from "./services/multiplayer.service";
 import { PhysicsService }           from "./services/physics.service";
-import { WebSocketService }         from "./services/webSocket.service";
 import { AnimationService }         from "./services/animation.service";
 import { PlayerService }            from "./services/player.service";
 
@@ -53,8 +52,7 @@ const appRoutes: Routes = [
         MultiplayerService,
         PhysicsService,
         AnimationService,
-        PlayerService,
-        WebSocketService
+        PlayerService
     ],
     bootstrap: [ AppComponent ]
 })

@@ -29,6 +29,7 @@ export interface IGravityObject {
 }
 
 export interface IPlayerObject {
+    ID : string
     position : IVector
     rotation : IVector
     name : string

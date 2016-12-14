@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 app.use(express.static('../site/dist'));
 
@@ -10,12 +10,68 @@ app.get('/', function (req, res) {
     res.sendFile('index.html', {root: '../site/dist/'})
 });
 
-io.on('connection', function(socket){
-    console.log('a user connected');
+const playerList = [];
 
-    socket.on('playerPosition', function(msg){
-        socket.broadcast.emit('playerPosition', msg);
+//as struct
+const playerObject = {
+    ID : '',
+    position: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+    rotation: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+    name: '',
+    bike: '',
+    bikeTexture: ''
+};
+
+io.on('connection', socket => {
+    console.log('a user connected: ' + socket.id);
+
+    socket.on('gameConnect', (player, fn) => {
+        console.log('Game connected: ' + socket.id);
+        //send back the playerlist without the added player
+        fn({ID : socket.id, playerList : playerList});
+        //adding player to server player list
+
+        player.ID = socket.id;
+        playerList.push(player);
+
+        socket.broadcast.emit('newPlayer', {player: player});
     });
+
+    socket.on('playerPosition', (player, fn) => {
+        //update playerlist and send back other players
+        for (let x in playerList) {
+            if (playerList[x].ID == socket.id) {
+                playerList[x].position.x = player.position.x;
+                playerList[x].position.z = player.position.z;
+                playerList[x].position.y = player.position.y;
+                playerList[x].rotation.x = player.rotation.x;
+                playerList[x].rotation.z = player.rotation.z;
+                playerList[x].rotation.y = player.rotation.y;
+
+                fn({playerList : playerList});
+                return;
+            }
+        }
+    });
+
+    socket.on('disconnect', () => {
+        //delete the player from the list
+        io.sockets.emit('disconnectedPlayer',{ID : socket.id});
+        for (let x in playerList) {
+            if (playerList[x].ID == socket.id) {
+                playerList.splice(parseInt(x), 1);
+                console.log('player Disconnected: ' + socket.id);
+            }
+        }
+    })
 });
 
 http.listen(9900, function () {
