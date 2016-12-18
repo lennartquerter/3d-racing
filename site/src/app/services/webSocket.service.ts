@@ -8,7 +8,7 @@ export class WebSocketService {
     socket : SocketIOClient.Socket;
 
     constructor() {
-        this.socket = io.connect();
+        this.socket = io.connect('localhost:9900');
     }
 
     ngOnInit() {
@@ -24,6 +24,10 @@ export class WebSocketService {
     sendPlayerPosition(position : IPlayerObject) {
         return new Promise((resolve, reject) => {
             this.socket.emit('playerPosition', position,(data :any) => {
+                if (data.error) {
+                    console.log((`Errored on send player position : ${data.error}`));
+                    reject(`Errored on send player position : ${data.error}`)
+                }
                 resolve(data.playerList)
             })
         })
@@ -69,10 +73,8 @@ export class WebSocketService {
     connectToGame(player : IPlayerObject) : any {
         return new Promise((resolve, reject) => {
             this.socket.emit('gameConnect', player,(data :any) => {
-                console.log('got data from gameConnect');
-                resolve(data)
+                resolve(data);
             })
         })
-
     }
 }

@@ -1,10 +1,22 @@
-import {IKeyPress} from "../interface";
+import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "../interface";
 import {Injectable} from "@angular/core";
 
 @Injectable()
 export class UpdateService {
     acceleration: number = 0;
-    maxSpeed : number = 7;
+
+    accelerationLevels = {
+        afterMaxSpeed : 0.0018,
+        slowDown: 0.00125,
+        level1 : 0.01,
+        level2 : 0.015,
+        level3 : 0.02,
+        level4 : 0.025,
+        level5 : 0.03,
+    };
+
+
+
     generalCarSpeedMultiplier: number =  1000;
     direction = {
         X: 0,
@@ -23,7 +35,7 @@ export class UpdateService {
         this.acceleration = 0;
     }
 
-    public update(car :any, camera :any, keys: IKeyPress, dt :number) : number {
+    public update(car :any, camera :any, currentPlayer: IPlayerObject, keys: IKeyPress, dt :number, drag: IGravityCheckReturn) {
         const step = dt * this.generalCarSpeedMultiplier;
         this.direction = {
             X: 0,
@@ -31,28 +43,41 @@ export class UpdateService {
             Y: 0,
         };
 
-        if (this.acceleration > 0) {
-            this.acceleration -= 0.0012;
+        if (drag.g > 1) {
+            currentPlayer.acceleration -= this.accelerationLevels.level3;
+        } else if (drag.g < -1) {
+            currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
+        }
+
+        if (currentPlayer.acceleration > 0) {
+            currentPlayer.acceleration -= this.accelerationLevels.slowDown;
             if (car.rotation.x > 0.00) car.rotateX(-0.001);
         } else {
-            this.acceleration += 0.0012;
+            currentPlayer.acceleration += this.accelerationLevels.slowDown;
         }
 
         if (keys.UP) {
-            if (this.acceleration < this.maxSpeed) {
-                if (this.acceleration < 0) {
-                    this.acceleration += 0.03;
+            if (currentPlayer.acceleration < currentPlayer.speed.forward) {
+                if (currentPlayer.acceleration < 0) {
+                    currentPlayer.acceleration += this.accelerationLevels.level5;
                 } else {
-                    this.acceleration += 0.02;
+                    if (currentPlayer.acceleration < 7) {
+                        currentPlayer.acceleration +=this.accelerationLevels.level2;
+                    }
+                    if (currentPlayer.acceleration < 4) {
+                        currentPlayer.acceleration += this.accelerationLevels.level3
+                    }
                 }
+            } else if (currentPlayer.acceleration < currentPlayer.speed.ultamateforward) {
+                    currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
             }
         }
         if (keys.DOWN) {
-            if (this.acceleration > -1.4) {
-                if (this.acceleration > 0) {
-                    this.acceleration -= 0.03;
+            if (currentPlayer.acceleration > currentPlayer.speed.backwards) {
+                if (currentPlayer.acceleration > 0) {
+                    currentPlayer.acceleration -= this.accelerationLevels.level5
                 } else {
-                    this.acceleration -= 0.015;
+                    currentPlayer.acceleration -= this.accelerationLevels.level2
                 }
             }
         }
@@ -65,12 +90,12 @@ export class UpdateService {
         }
 
         if (parseInt(Math.cos(car.rotation.z).toFixed(0)) > -1) {
-            this.direction.Z = step * this.acceleration * Math.cos(car.rotation.y);
+            this.direction.Z = step * currentPlayer.acceleration * Math.cos(car.rotation.y);
         } else {
-            this.direction.Z = step * this.acceleration * -Math.cos(car.rotation.y);
+            this.direction.Z = step * currentPlayer.acceleration * -Math.cos(car.rotation.y);
         }
 
-        this.direction.X = step * this.acceleration * Math.sin(car.rotation.y);
+        this.direction.X = step * currentPlayer.acceleration * Math.sin(car.rotation.y);
 
         car.position.z -= this.direction.Z;
         car.position.x -= this.direction.X;
@@ -82,9 +107,6 @@ export class UpdateService {
 
         camera.quaternion.slerp(car.quaternion, 0.1);
         camera.position.y = car.position.y + 200;
-
-
-        return this.acceleration;
     }
 
 

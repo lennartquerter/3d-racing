@@ -10,6 +10,11 @@ app.get('/', function (req, res) {
     res.sendFile('index.html', {root: '../site/dist/'})
 });
 
+
+app.post('/api/login', function (req, res) {
+    console.log(req)
+});
+
 const playerList = [];
 
 //as struct
@@ -35,20 +40,23 @@ io.on('connection', socket => {
 
     socket.on('gameConnect', (player, fn) => {
         console.log('Game connected: ' + socket.id);
+
+        //adding player to server player list
+        player.ID = socket.id;
+        socket.broadcast.emit('newPlayer', {player: player});
         //send back the playerlist without the added player
         fn({ID : socket.id, playerList : playerList});
-        //adding player to server player list
-
-        player.ID = socket.id;
         playerList.push(player);
-
-        socket.broadcast.emit('newPlayer', {player: player});
+        console.log('player added ' + playerList.length);
     });
 
     socket.on('playerPosition', (player, fn) => {
         //update playerlist and send back other players
+        if (!player.ID) {
+            fn({error : "Player has no ID"})
+        }
         for (let x in playerList) {
-            if (playerList[x].ID == socket.id) {
+            if (playerList[x].ID == player.ID) {
                 playerList[x].position.x = player.position.x;
                 playerList[x].position.z = player.position.z;
                 playerList[x].position.y = player.position.y;

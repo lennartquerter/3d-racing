@@ -32,9 +32,11 @@ export interface IPlayerObject {
     ID : string
     position : IVector
     rotation : IVector
+    acceleration : number
     name : string
     bike : string
     bikeTexture : string
+    speed : ISpeedObject
 }
 
 export interface IVector {
@@ -47,4 +49,18 @@ export interface IGeneralObject {
     dt: number
     last: number
     frame: number
+}
+
+export interface ISpeedObject {
+    forward : number
+    ultamateforward : number,
+    backwards : number
+}
+
+
+export interface IHomePageModel {
+    name: string
+    password: string
+    passwordCheck: string
+    email: string
 }

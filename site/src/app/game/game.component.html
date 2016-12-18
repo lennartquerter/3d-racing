@@ -1,8 +1,8 @@
 <div #canvas class="main">
-    <div class="gui">
-        <progress class="speed-progress" max="400" [value]="gui.speed * 100"></progress>
-        <i class="speed">{{(gui.speed * 100).toFixed(0)}} km/h</i>
-        <i class="gravity">{{(gui.gravity.toFixed(0))}} m</i>
+    <div class="gui" (mousedown)="handleClickEvents($event, true)" (mouseup)="handleClickEvents($event, false)" (mousemove)="handleMouseMovement($event)">
+        <progress class="speed-progress" max="{{currentPlayer.speed.forward * 100}}" [value]="currentPlayer.acceleration * 100"></progress>
+        <i class="speed">{{(currentPlayer.acceleration * 100).toFixed(0)}} km/h</i>
+        <i class="gravity">{{(gui.gravity.toFixed(0))}} <></i>
         <i class="laptime">Current: {{(gui.lapTime)}} sec</i>
         <i class="best-lap">Best: {{(gui.bestLap)}} sec</i>
         <div [hidden]="!state.dead">

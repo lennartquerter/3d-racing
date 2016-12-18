@@ -1,6 +1,7 @@
 import { NgModule }                 from '@angular/core';
 import { BrowserModule }            from '@angular/platform-browser';
 import { RouterModule, Routes }     from '@angular/router';
+import {HttpModule}                 from "@angular/http";
 
 import { AppComponent }             from './app.component';
 
@@ -19,6 +20,9 @@ import { MultiplayerService }       from "./services/multiplayer.service";
 import { PhysicsService }           from "./services/physics.service";
 import { AnimationService }         from "./services/animation.service";
 import { PlayerService }            from "./services/player.service";
+import { WebSocketService }         from "./services/webSocket.service";
+import { FormsModule }              from "@angular/forms";
+import { ApiService }               from "./services/api.service";
 
 
 const appRoutes: Routes = [
@@ -34,6 +38,8 @@ const appRoutes: Routes = [
 @NgModule({
     imports: [
         BrowserModule,
+        FormsModule,
+        HttpModule,
         RouterModule.forRoot(appRoutes)
     ],
     declarations: [
@@ -52,7 +58,9 @@ const appRoutes: Routes = [
         MultiplayerService,
         PhysicsService,
         AnimationService,
-        PlayerService
+        PlayerService,
+        WebSocketService,
+        ApiService
     ],
     bootstrap: [ AppComponent ]
 })

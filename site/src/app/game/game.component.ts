@@ -20,7 +20,6 @@ import {PlayerService} from "../services/player.service";
 })
 export class GameComponent {
     gui = {
-        speed : 0,
         gravity : 0,
         lapTime : 0
         // bestLap : 100,
@@ -45,7 +44,7 @@ export class GameComponent {
         RIGHT: false
     };
 
-    player : THREE.Object3D;
+    player : THREE.Object3D; // 3D model of the player
     light : THREE.Light;
     pointLight : THREE.Light;
     skyBox : THREE.Object3D;
@@ -55,7 +54,7 @@ export class GameComponent {
         dead : false
     };
 
-    currentPlayer : IPlayerObject;
+    currentPlayer : IPlayerObject; // is the object of the player state
     connectedPlayers : IPlayerObject[] = [];
 
 
@@ -94,6 +93,14 @@ export class GameComponent {
         this.keys = this._keyService.onKeyPress(event, false);
     }
 
+    handleClickEvents(event : any, mouseDown : boolean){
+        this.keys = this._keyService.onClickEvent(event, mouseDown);
+    }
+
+    handleMouseMovement(event : any){
+        this.keys = this._keyService.onMouseMovement(event);
+    }
+
     //***********************
     //on component load
     //***********************
@@ -112,6 +119,8 @@ export class GameComponent {
         this._socketService.connectToGame(this.currentPlayer)
             .then((res : any) => {
                 this.connectedPlayers = res.playerList;
+                console.log(res);
+                this.currentPlayer.ID = res.ID;
                 if (this.connectedPlayers.length > 0) {
                     console.log('there are other players in scene');
                     this._multiplayerService.initializePlayers(this.scene, this.connectedPlayers)
@@ -119,6 +128,10 @@ export class GameComponent {
                 } else {
                     this.loadCurrentGame()
                 }
+            })
+            .catch((err : any) => {
+            console.log('starting a offline game');
+            this.loadCurrentGame();
             })
     }
 
@@ -135,6 +148,12 @@ export class GameComponent {
                 y: 0,
                 z: 0
             },
+            speed : {
+                forward : 7,
+                ultamateforward : 10,
+                backwards : -1.4
+            },
+            acceleration: 0,
             name : "test2",
             bike : this._player.getBike(),
             bikeTexture : this._player.getTexture()
@@ -223,10 +242,12 @@ export class GameComponent {
         this.player.rotation.x = 0;
         this.player.rotation.y = 0;
         this.player.rotation.z = 0;
+        this.currentPlayer.acceleration = 0;
         this.skyBox.position.copy(this.player.position);
         this.camera.position.copy(this.player.position);
         this._updateService.reset();
-        this.animate();
+
+        this._animationService.startAnimation();
     }
 
     //***********************
@@ -240,7 +261,7 @@ export class GameComponent {
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
         this._physicsService.setupGravity(this.scene);
 
-        this.animate();
+        this._animationService.startAnimation();
     }
 
     setupInitState() {
@@ -268,50 +289,33 @@ export class GameComponent {
     }
 
     //***********************
-    //animations
+    //Rendering
     //***********************
 
-    animate() {
-        const now = new Date().getTime();
-        this.general.dt = Math.min(1, (now - this.general.last) / 1000);
-        this.general.last = now;
-        this.render();
-        if (!this.state.dead) {
-            this.general.frame++;
-            if (this.general.frame > 24) {
-                this.general.frame = 0;
-            }
-            requestAnimationFrame(() => this.animate());
-        }
-    }
-
     render() {
-        this.gui.speed = this._updateService.update(this.player, this.camera, this.keys, this.general.dt);
         const obj : IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.camera);
-        if (obj.d) {
-            this.state.dead = true;
-        }
+        this._updateService.update(this.player, this.camera, this.currentPlayer, this.keys, this.general.dt, obj);
+
+        this.checkState(obj.d);
         this.gui.lapTime = obj.lt;
 
-        if (this.general.frame % 4 == 0) {
-            //update player here
-            this.currentPlayer.position.x = this.player.position.x;
-            this.currentPlayer.position.y = this.player.position.y;
-            this.currentPlayer.position.z = this.player.position.z;
-            this.currentPlayer.rotation.x = this.player.rotation.x;
-            this.currentPlayer.rotation.y = this.player.rotation.y;
-            this.currentPlayer.rotation.z = this.player.rotation.z;
-
-            this._socketService.sendPlayerPosition(this.currentPlayer)
-                .then((data : any) => {
-                    this.connectedPlayers = data;
-                    this._multiplayerService.updateOtherPlayers(this.connectedPlayers)
-                });
+        if (this.general.frame % 4 == 0 && this._socketService.socket.connected) {
+            this._multiplayerService.SendPlayerUpdate(this.player, this.currentPlayer, this.connectedPlayers);
+        } else {
+            this._multiplayerService.RenderOtherPlayersPosition(this.general.dt, this.connectedPlayers)
         }
+
 
         this.gui.gravity = obj.g;
         //keep skyBox around bike
         this.skyBox.position.copy(this.player.position);
         this.renderer.render(this.scene, this.camera);
+    }
+
+    checkState(death : boolean) {
+        if (death) {
+            this._animationService.stopAnimation();
+            this.state.dead = true;
+        }
     }
 }

@@ -11,7 +11,9 @@ export class KeyService {
         RIGHT: false
     };
 
-    onKeyPress(event: any, keyDown: boolean) {
+    mouseDown : boolean = false;
+
+    onKeyPress(event: any, keyDown: boolean) : IKeyPress {
         if (event.key == 'w' || event.keyCode == 38) {
             this.keys.UP = keyDown;
         } else if (event.key == 's' || event.keyCode == 40) {
@@ -25,4 +27,25 @@ export class KeyService {
         return this.keys
     }
 
+    onClickEvent(event : any, mousedown : boolean) : IKeyPress {
+        this.keys.UP = mousedown;
+        this.mouseDown = mousedown;
+        return this.keys;
+    }
+
+
+    onMouseMovement(event : any) : IKeyPress {
+        //op mobile zou dit gewoon de camera moeten zijn denk ik ....
+        //misschien ook op desktop
+        // console.log(event.srcElement.clientWidth);
+        // if (event.offsetX > 880) {
+        //     this.keys.RIGHT = true;
+        // } else if (event.offsetX < 400) {
+        //     this.keys.LEFT = true;
+        // } else {
+        //     this.keys.LEFT = false;
+        //     this.keys.RIGHT = false;
+        // }
+        return this.keys
+    }
 }

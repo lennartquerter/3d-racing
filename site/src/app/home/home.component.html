@@ -1,5 +1,120 @@
-<div>
-    <!--<input type="text" placeholder="name">-->
-    <!--<input type="password" placeholder="password">-->
-    <button (click)="selectBike()">Select bike</button>
-</div>
+<article>
+    <section class="hero">
+        <!-- Hero header: will stick at the top -->
+        <div class="hero-head">
+            <header class="nav">
+                <div class="container">
+                    <div class="nav-left">
+                        <a class="nav-item">
+                            <!--<img src="" alt="Logo">-->
+                        </a>
+                    </div>
+                    <span class="nav-toggle">
+
+                    </span>
+                    <div class="nav-right nav-menu">
+                        <a class="nav-item is-active">
+                            Home
+                        </a>
+                        <a class="nav-item">
+                            Demo
+                        </a>
+                        <a class="nav-item">
+                            Contact
+                        </a>
+                    </div>
+                </div>
+            </header>
+        </div>
+
+        <!-- Hero content: will be in the middle -->
+        <div class="hero-body is-dark">
+            <div class="container">
+                <h1 class="title">
+                    FMB
+                </h1>
+                <h2 class="subtitle">
+                    Get Ready
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="hero is-ancestor">
+            <div class="hero-body">
+                &nbsp;
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <div class="tile is-ancestor">
+            <div class="tile is-vertical is-8">
+                <div class="tile">
+                    <div class="tile is-parent is-vertical">
+                        <article class="tile is-child notification is-primary">
+                            <p class="title">High Scores</p>
+                            <p class="subtitle"></p>
+                        </article>
+                        <article class="tile is-child notification is-warning">
+                            <p class="title"></p>
+                            <p class="subtitle">Bottom tile</p>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-info">
+                            <p class="title">News</p>
+                            <p class="subtitle">With an image</p>
+                            <figure class="image is-4by3">
+                                <img src="http://placehold.it/640x480">
+                            </figure>
+                        </article>
+                    </div>
+                </div>
+                <div class="tile is-parent">
+                    <article class="tile is-child notification is-danger">
+                        <p class="title">Something happening</p>
+                        <p class="subtitle"></p>
+                        <div class="content">
+                            <!-- Content -->
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <div class="tile is-parent">
+                <article class="tile is-child notification is-success">
+                    <div class="content">
+                        <p class="title">Login</p>
+                        <p class="subtitle">Access the gamehub</p>
+                        <div class="content">
+                            <label class="label">Name</label>
+                            <p class="control">
+                                <input class="input" type="text" placeholder=""[(ngModel)]="model.name">
+                            </p>
+                            <label class="label">Password</label>
+                            <p class="control">
+                                <input class="input" type="text" placeholder="" [(ngModel)]="model.password">
+                            </p>
+                            <span *ngIf="showRegister">
+                            <label class="label">Password check</label>
+                            <p class="control">
+                                <input class="input" type="text" placeholder="" [(ngModel)]="model.passwordcheck">
+                            </p>
+                            <label class="label">Email</label>
+                            <p class="control">
+                                <input class="input" type="text" placeholder="" [(ngModel)]="model.email">
+                            </p>
+                        </span>
+
+                            <button class="button is-primary" (click)="login()">Login</button>
+                            <button class="button is-primary" (click)="showRegister = !showRegister">Register</button>
+                            <button class="button is-primary" (click)="selectBike()">StartDevGame</button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+</article>

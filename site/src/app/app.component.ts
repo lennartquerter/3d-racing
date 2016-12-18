@@ -6,7 +6,7 @@ import {GameComponent} from "./game/game.component";
 @Component({
     selector: 'app',
     templateUrl: './app.component.html',
-    providers : [GameComponent]
+    providers : []
 })
 export class AppComponent {
 
