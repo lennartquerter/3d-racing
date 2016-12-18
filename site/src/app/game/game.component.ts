@@ -1,3 +1,5 @@
+/// <reference path="../../../../typings/index.d.ts" />
+
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
 import {UpdateService} from "../services/update.service";
 import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "../interface";

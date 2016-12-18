@@ -1,3 +1,6 @@
+/// <reference path="../../../../typings/index.d.ts" />
+
+
 import {Component, ViewChild, ElementRef} from "@angular/core";
 import {AnimationService} from "../services/animation.service";
 import {Subscription} from "rxjs";

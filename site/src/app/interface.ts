@@ -1,5 +1,4 @@
 
-import {isBoolean} from "util";
 export interface IKeyPress {
     UP: boolean,
     DOWN: boolean,
