@@ -1,4 +1,3 @@
-/// <reference path="../../../../typings/index.d.ts" />
 
 import {Injectable} from "@angular/core";
 
@@ -8,7 +7,7 @@ export class LoaderService {
 
     }
 
-    loadOBJ(path : string, textureFile: string) {
+    loadOBJ(path : string, textureFile: string, name : string) {
 
         if (!path) {
             console.log("could not get url to bike, using standard bike");
@@ -35,6 +34,7 @@ export class LoaderService {
                         child.material.map = texture;
                     }
                 });
+                object.name = name;
                 resolve(object);
             });
         });

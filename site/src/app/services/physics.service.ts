@@ -90,19 +90,19 @@ export class PhysicsService {
         //check for distance between the road and object
 
         if (this.distanceAbove <= 1) {
-            outcome -= this.distanceAbove * 0.6;
+            outcome -= this.distanceAbove * 1.2;
         } else if (this.distanceAbove > 1) {
-            outcome += this.distanceAbove * 0.6;
+            outcome += this.distanceAbove * 1.2;
         }
         if (this.distanceBelow <= 1) {
-            outcome += this.distanceBelow * 0.2;
+            outcome += this.distanceBelow * 0.4;
         } else if (this.distanceBelow > 1) {
-            outcome -= this.distanceBelow * 0.2;
+            outcome -= this.distanceBelow * 0.4;
         }
 
         if (!this.intersect) {
             //g * m / d
-            outcome -= (25000 / (player.position.y - this.deathBB.min.y));
+            outcome -= (50000 / (player.position.y - this.deathBB.min.y));
         }
         //change cam dir when going up or down
         if (this.previousOutcome - player.position.y > 2) {
@@ -122,9 +122,9 @@ export class PhysicsService {
 
     checkForCollision(player: THREE.Object3D) {
         const distance = 128;
-        let collisions;
-        let i;
-        let startCollisions;
+        let collisions : any;
+        let i : number;
+        let startCollisions : any;
 
         this.intersect = false;
 

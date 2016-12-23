@@ -1,106 +1,98 @@
-/// <reference path="../../typings/index.d.ts" />
-import * as bodyParser from "body-parser";
-import * as mongoose from 'mongoose';
-import * as express from "express";
+/// <reference path="../typings/index.d.ts" />
 
-import * as http from 'http';
-import * as io from "socket.io"
+//****************
+//imports
+//****************
 
-import {RoutesComponent} from "./server/routes/index";
-import {ApiComponent} from "./server/api/index";
-import {IPlayerObject} from "./interface.server";
+import * as bodyParser                      from "body-parser";
+import * as mongoose                        from 'mongoose';
+import * as express                         from "express";
+
+import {RoutesComponent}                    from "./server/routes/index";
+import {ApiComponent}                       from "./server/api/index";
+
+import {Sockets}                            from "./server/socket/index";
+import {IPlayerObject}                      from "./interface.server";
+
+//****************
+//Setup
+//****************
 
 const app = express();
 
+const server = require('http').Server(app);
+const sio = require('socket.io')(server);
 
-http.Server(app);
-io(http);
+//****************
+//middleware
+//****************
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
-app.use(express.static('../site/dist'));
+app.use(express.static('../../site/dist'));
 
-//database
+//****************
+//Database
+//****************
+
 mongoose.connect('localhost:27017/game');
 
 const db = mongoose.connection;
 
-db.on('error', function (err) {
+db.on('error', (err : any) => {
     console.log('Database gave an error.');
     console.log(err);
 });
-db.once('open', function() {
+
+db.once('open', () => {
     console.log('The server is connected to a Mongo DataBase.')
 });
 
+//****************
+//Server
+//****************
 
+const s = new Sockets();
+let playerList : IPlayerObject[] = [];
 
-
-const playerList : IPlayerObject[] = [];
-
-
-
-io.on('connection', socket => {
-    console.log('a user connected: ' + socket.id);
-
+sio.on('connection', socket => {
     socket.on('gameConnect', (player, fn) => {
-        console.log('Game connected: ' + socket.id);
-
-        //adding player to server player list
-        player.ID = socket.id;
-        socket.broadcast.emit('newPlayer', {player: player});
-        //send back the playerlist without the added player
-        fn({ID : socket.id, playerList : playerList});
-        playerList.push(player);
-        console.log('player added ' + playerList.length);
+        playerList = s.gameConnect(player, fn, socket, playerList)
     });
-
     socket.on('playerPosition', (player, fn) => {
-        //update playerlist and send back other players
-        if (!player.ID) {
-            fn({error : "Player has no ID"})
-        }
-        for (let x in playerList) {
-            if (playerList[x].ID == player.ID) {
-                playerList[x].position.x = player.position.x;
-                playerList[x].position.z = player.position.z;
-                playerList[x].position.y = player.position.y;
-                playerList[x].rotation.x = player.rotation.x;
-                playerList[x].rotation.z = player.rotation.z;
-                playerList[x].rotation.y = player.rotation.y;
-
-                fn({playerList : playerList});
-                return;
-            }
-        }
+        playerList = s.playerPosition(player, fn, socket, playerList)
+    });
+    socket.on('disconnect', (player, fn) => {
+        console.log('disconnect');
+        playerList = s.disconnect(player, fn, socket, playerList)
     });
 
-    socket.on('disconnect', () => {
-        //delete the player from the list
-        io.sockets.emit('disconnectedPlayer',{ID : socket.id});
-        for (let x in playerList) {
-            if (playerList[x].ID == socket.id) {
-                playerList.splice(parseInt(x), 1);
-                console.log('player Disconnected: ' + socket.id);
-            }
-        }
-    })
 });
 
-const Routes = new RoutesComponent();
-const Api = new ApiComponent();
+//*************
+//routing & api:
+//*************
 
-// Routes
+let Routes = new RoutesComponent();
+let Api = new ApiComponent();
+
+//Routing
+//Home Page
 
 app.get('/', Routes.home);
 
-//product functions
+//API
+app.post('/api/:type', (req: express.Request, res: express.Response) => {
+    const type = req.params.type;
+    const data : any = req.body.data;
+    Api.request(data, res, type)
+});
 
-app.post('/api/:type', Api.request);
 
+//*************
+//Serving
+//*************
 
-//app serve
-
-http.listen(9900, function () {
+server.listen(9900, function () {
     console.log('Extreme G Racing on port 9900')
 });

@@ -1,0 +1,19 @@
+{
+  "name": "angular2-webpack",
+  "dependencies": {
+    "body-parser": "registry:dt/body-parser#0.0.0+20160726204056",
+    "express": "registry:dt/express#4.0.0+20161115070701",
+    "mime": "registry:dt/mime#0.0.0+20160428043022",
+    "mongodb": "registry:dt/mongodb#2.1.0+20161124001022",
+    "serve-static": "registry:dt/serve-static#1.7.1+20161128184045"
+  },
+  "globalDependencies": {
+    "es6-shim": "registry:dt/es6-shim#0.31.2+20160317120654",
+    "express-serve-static-core": "registry:dt/express-serve-static-core#4.0.0+20161119044246",
+    "moment": "registry:dt/moment#2.11.1+20161010105546",
+    "mongoose": "registry:dt/mongoose#4.7.0+20161208164141",
+    "node": "registry:dt/node#6.0.0+20161212163245",
+    "socket.io": "registry:dt/socket.io#1.4.4+20160915014424",
+    "three": "registry:dt/three#0.0.0+20161208073813"
+  }
+}

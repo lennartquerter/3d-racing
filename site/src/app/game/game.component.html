@@ -1,14 +1,16 @@
 <div #canvas class="main">
     <div class="gui" (mousedown)="handleClickEvents($event, true)" (mouseup)="handleClickEvents($event, false)" (mousemove)="handleMouseMovement($event)">
-        <progress class="speed-progress" max="{{currentPlayer.speed.forward * 100}}" [value]="currentPlayer.acceleration * 100"></progress>
-        <i class="speed">{{(currentPlayer.acceleration * 100).toFixed(0)}} km/h</i>
-        <i class="gravity">{{(gui.gravity.toFixed(0))}} <></i>
-        <i class="laptime">Current: {{(gui.lapTime)}} sec</i>
-        <i class="best-lap">Best: {{(gui.bestLap)}} sec</i>
+        <div [hidden]="state.dead">
+            <progress class="speed-progress" max="{{currentPlayer.bike.Stats.MaxSpeed}}" [value]="currentPlayer.acceleration * 100"></progress>
+            <i class="speed">{{(currentPlayer.acceleration * 100).toFixed(0)}} km/h</i>
+            <i class="gravity">{{(gui.gravity.toFixed(0))}} <></i>
+            <i class="laptime">Current: {{(gui.lapTime)}} sec</i>
+            <!--<i class="best-lap">Best: {{(gui.bestLap)}} sec</i>-->
+            <i class="best-lap">fps: {{(general.fps.toFixed(0))}} fps</i>
+        </div>
         <div [hidden]="!state.dead">
-
-            <h2 >YOU DIEDEDEDED </h2>
-            <button (click)="reloadGame()">restart</button>
+            <h2 class="title">YOU DIED! </h2>
+            <button class="button" (click)="reloadGame()">restart</button>
         </div>
     </div>
 </div>

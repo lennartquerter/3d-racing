@@ -29,11 +29,11 @@ export class MultiplayerService {
         console.log('init other players');
         console.log(players);
         return new Promise((resolve, reject) => {
-            const promiseList = [];
+            const promiseList : any[] = [];
             for (let x in players) {
-                const player = players[x].bike;
-                const playerText = players[x].bikeTexture;
-                promiseList.push(this._loader.loadOBJ(player, playerText))
+                const player = players[x].bike.Bike;
+                const playerText = players[x].bike.Texture;
+                promiseList.push(this._loader.loadOBJ(player, playerText, ""))
             }
             Promise.all(promiseList)
                 .then(
@@ -59,9 +59,9 @@ export class MultiplayerService {
     }
 
     startNewPlayer(scene : THREE.Scene, player: IPlayerObject) {
-        const bike = player.bike;
-        const playerText = player.bikeTexture;
-        this._loader.loadOBJ(bike, playerText).then(
+        const bike = player.bike.Bike;
+        const playerText = player.bike.Texture;
+        this._loader.loadOBJ(bike, playerText, "").then(
             (res: THREE.Object3D) => {
                 this.players[player.ID] = res;
                 console.log('added player');

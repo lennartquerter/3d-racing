@@ -1,13 +1,15 @@
 import { Observable } from 'rxjs';
-import {Injectable} from "@angular/core";
+import {Injectable, Inject} from "@angular/core";
 import {IPlayerObject} from "../interface";
 import * as io from "socket.io-client";
+import {ApiService} from "./api.service";
 
 @Injectable()
 export class WebSocketService {
     socket : SocketIOClient.Socket;
 
-    constructor() {
+    constructor(
+    ) {
         this.socket = io.connect('localhost:9900');
     }
 
@@ -70,9 +72,16 @@ export class WebSocketService {
         return observable;
     }
 
-    connectToGame(player : IPlayerObject) : any {
+    connectToGame(player : IPlayerObject, token: string) : any {
+        const data = {
+            player : player,
+            token : token
+        };
+
+        console.log(data);
+
         return new Promise((resolve, reject) => {
-            this.socket.emit('gameConnect', player,(data :any) => {
+            this.socket.emit('gameConnect', data,(data :any) => {
                 resolve(data);
             })
         })

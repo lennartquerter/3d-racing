@@ -1,10 +1,7 @@
-/// <reference path="../../../../typings/index.d.ts" />
-
-
-import {Component, ViewChild, ElementRef} from "@angular/core";
+import {Component, ViewChild, ElementRef, HostListener} from "@angular/core";
 import {AnimationService} from "../services/animation.service";
 import {Subscription} from "rxjs";
-import {IGeneralObject} from "../interface";
+import {IGeneralObject, IBike} from "../interface";
 import {LightService} from "../services/light.service";
 import {SkyBoxService} from "../services/skybox.service";
 import {LoaderService} from "../services/loader.service";
@@ -15,30 +12,24 @@ import {PlayerService} from "../services/player.service";
     selector: 'player-select',
     templateUrl: './player-select.component.html',
 })
+
 export class PlayerSelectComponent {
     scene: any = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
     renderer = new THREE.WebGLRenderer();
 
     trackingBike : THREE.Vector3 = new THREE.Vector3(0,0,0);
+    bikeList : THREE.Object3D[] = [];
     trackIndex = 0;
 
     t = 0;
 
-    bike01 : THREE.Object3D;
-    bike02 : THREE.Object3D;
-    bike03 : THREE.Object3D;
     light : THREE.Light;
-    pointLight01 : THREE.Light;
-    pointLight02 : THREE.Light;
-    pointLight03 : THREE.Light;
+    pointLightList : THREE.Light[] = [];
     skyBox : THREE.Object3D;
 
     loaded = {
-        bike01: false,
-        bike02: false,
-        bike03: false,
-        skybox: false,
+        skybox: false
     };
 
     general : IGeneralObject = {
@@ -47,15 +38,67 @@ export class PlayerSelectComponent {
         frame: 0
     };
 
-    textures = [require("../../../assets/textures/tron-01.jpg"), require("../../../assets/textures/tron-02.jpg"), require("../../../assets/textures/tron-03.jpg")];
-    bikes = [require("../../../assets/objects/bike_2.obj"),require("../../../assets/objects/bike_2.obj"),require("../../../assets/objects/bike_2.obj")];
+    loaderList : IBike[] = [
+        {
+            Texture: require("../../../assets/textures/tron-01.jpg"),
+            Bike :require("../../../assets/objects/bike_2.obj"),
+            Name : 'bike-01',
+            Stats : {
+                Acceleration : 700,
+                MaxSpeed : 1000,
+                Shield : 500,
+                ShieldRechargeRate : 100
+            }
+        },
+        {
+            Texture: require("../../../assets/textures/tron-02.jpg"),
+            Bike :require("../../../assets/objects/bike_2.obj"),
+            Name : 'bike-02',
+            Stats : {
+                Acceleration : 800,
+                MaxSpeed : 900,
+                Shield : 400,
+                ShieldRechargeRate : 130
+            }
+        },
+        {
+            Texture: require("../../../assets/textures/tron-03.jpg"),
+            Bike :require("../../../assets/objects/bike_2.obj"),
+            Name : 'bike-03',
+            Stats : {
+                Acceleration : 500,
+                MaxSpeed : 1200,
+                Shield : 300,
+                ShieldRechargeRate : 180
+            }
+        },
+        {
+            Texture: require("../../../assets/textures/tron-04.jpg"),
+            Bike :require("../../../assets/objects/bike_2.obj"),
+            Name : 'bike-04',
+            Stats : {
+                Acceleration : 1000,
+                MaxSpeed : 1400,
+                Shield : 700,
+                ShieldRechargeRate : 250
+            }
+        }
+    ];
+
+    guiStats : any = this.loaderList[0].Stats;
 
     @ViewChild("canvas") _canvas: ElementRef;
 
     animateSubscription : Subscription;
 
+    @HostListener('document:keydown', ['$event'])
+    handleKeyDown(event: KeyboardEvent) {
+        this.onKeyDown(event);
+    }
+
+    private _animationService : AnimationService = new AnimationService();
+
     constructor(
-        private _animationService : AnimationService,
         private _lightService : LightService,
         private _loader : LoaderService,
         private _skyBoxService : SkyBoxService,
@@ -65,6 +108,9 @@ export class PlayerSelectComponent {
 
     ngOnInit() {
         this.loader();
+        for (let x in this.loaderList) {
+            this.loaded[this.loaderList[x].Name] = false;
+        }
 
         this.animateSubscription = this._animationService.animation().subscribe((generalObject : IGeneralObject) => {
             this.general = generalObject;
@@ -75,31 +121,16 @@ export class PlayerSelectComponent {
 
     loader() {
         this.light = this._lightService.addSoftAmbientLight();
-        this.pointLight01 = this._lightService.createSpotLight(0xddbfbf);
-        this.pointLight02 = this._lightService.createSpotLight(0xddbfbf);
-        this.pointLight03 = this._lightService.createSpotLight(0xddbfbf);
 
-
-        this._loader.loadOBJ(this.bikes[0], this.textures[0]).then(
-            (res: THREE.Object3D) => {
-                this.bike01 = res;
-                this.handleLoaded("bike01");
-            }
-        );
-
-        this._loader.loadOBJ(this.bikes[1], this.textures[1]).then(
-            (res: THREE.Object3D) => {
-                this.bike02 = res;
-                this.handleLoaded("bike02");
-            }
-        );
-
-        this._loader.loadOBJ(this.bikes[2], this.textures[2]).then(
-            (res: THREE.Object3D) => {
-                this.bike03 = res;
-                this.handleLoaded("bike03");
-            }
-        );
+        for (let x in this.loaderList) {
+            this.pointLightList.push(this._lightService.createSpotLight(0xddbfbf));
+            this._loader.loadOBJ(this.loaderList[x].Bike, this.loaderList[x].Texture, this.loaderList[x].Name).then(
+                (res: THREE.Object3D) => {
+                    this.bikeList.push(res);
+                    this.handleLoaded(res.name);
+                }
+            );
+        }
 
         this._skyBoxService.init().then(
             (res: THREE.Object3D) => {
@@ -123,7 +154,6 @@ export class PlayerSelectComponent {
         }
     }
 
-
     setup() {
 
         //camera and skybox
@@ -138,99 +168,84 @@ export class PlayerSelectComponent {
         this.initBikes();
 
         //Lighting
-
-        this.pointLight01.position.copy(this.bike01.position);
-        this.pointLight02.position.copy(this.bike02.position);
-        this.pointLight03.position.copy(this.bike03.position);
-
-        this.pointLight01.position.y = 3000;
-        this.pointLight02.position.y = 3000;
-        this.pointLight03.position.y = 3000;
-
-        this.pointLight01.lookAt(this.bike01.position);
-        this.pointLight02.lookAt(this.bike02.position);
-        this.pointLight03.lookAt(this.bike03.position);
-
-        this.scene.add( this.pointLight01 );
-        this.scene.add( this.pointLight02 );
-        this.scene.add( this.pointLight03 );
-
+        for (let x in this.bikeList) {
+            this.pointLightList[x].position.copy(this.bikeList[x].position);
+            this.pointLightList[x].position.y = 3000;
+            this.pointLightList[x].lookAt(this.bikeList[x].position);
+            this.scene.add( this.pointLightList[x] );
+        }
         //renderer size
 
         this.renderer.setSize(1280, 720);
-
         //add and start
+
+        this.trackingBike = this.bikeList[0].position;
 
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
         this._animationService.startAnimation();
     }
 
     initBikes() {
-
         //bikes:
+        this.bikeList[0].position.x = 1000;
+        this.bikeList[0].position.z = -1000;
 
-        this.bike02.position.x = 1000;
-        this.bike02.position.z = 1000;
+        this.bikeList[1].position.x = 1000;
+        this.bikeList[1].position.z = 1000;
 
-        this.bike03.position.x = -1000;
-        this.bike03.position.z = 1000;
+        this.bikeList[2].position.x = -1000;
+        this.bikeList[2].position.z = 1000;
+
+        this.bikeList[3].position.x = -1000;
+        this.bikeList[3].position.z = -1000;
 
         //cilinders:
 
-        const geometry = new THREE.CylinderGeometry( 300, 300, 20, 64 );
+        const geometry = new THREE.CylinderGeometry( 300, 300, 20, 128 );
         const material = new THREE.MeshBasicMaterial( {color: 0x4c4c4c} );
-
-        const cylinder01 = new THREE.Mesh( geometry, material );
-        const cylinder02 = new THREE.Mesh( geometry, material );
-        const cylinder03 = new THREE.Mesh( geometry, material );
-
-        cylinder01.position.copy(this.bike01.position);
-        cylinder02.position.copy(this.bike02.position);
-        cylinder03.position.copy(this.bike03.position);
-        cylinder01.position.y = -20;
-        cylinder02.position.y = -20;
-        cylinder03.position.y = -20;
-
-
-        this.scene.add( cylinder01 );
-        this.scene.add( cylinder02 );
-        this.scene.add( cylinder03 );
-        this.scene.add( this.bike01 );
-        this.scene.add( this.bike02 );
-        this.scene.add( this.bike03 );
+        for (let x in this.bikeList) {
+            const cylinder = new THREE.Mesh( geometry, material );
+            cylinder.position.copy(this.bikeList[x].position);
+            cylinder.position.y = -20;
+            this.scene.add( cylinder );
+            this.scene.add( this.bikeList[x]);
+        }
     }
 
-    nextBike() {
-        switch (this.trackIndex) {
-            case 0:
-                this.trackingBike = this.bike02.position;
-                this.trackIndex = 1;
-                break;
-            case 1:
-                this.trackingBike = this.bike03.position;
-                this.trackIndex = 2;
-                break;
-            case 2:
-                this.trackingBike = this.bike01.position;
-                this.trackIndex = 0;
-                break;
+    nextBike(selectDirection : boolean) {
+        if (selectDirection) {
+            if (this.trackIndex < this.bikeList.length - 1) this.trackIndex++;
+            else this.trackIndex = 0;
+        } else {
+            if (this.trackIndex > 0) this.trackIndex--;
+            else this.trackIndex = this.bikeList.length - 1;
         }
+
+        this.trackingBike = this.bikeList[this.trackIndex].position;
+        this.guiStats = this.loaderList[this.trackIndex].Stats;
     }
 
     render() {
         this.t += 0.01;
-        this.camera.position.x = 500*Math.cos(this.t) + this.trackingBike.x;
-        this.camera.position.z = 500*Math.sin(this.t) + this.trackingBike.z;
+        this.camera.position.x = 500 * Math.cos(this.t) + this.trackingBike.x;
+        this.camera.position.z = 500 * Math.sin(this.t) + this.trackingBike.z;
         this.camera.lookAt(this.trackingBike);
         this.renderer.render(this.scene, this.camera);
     }
 
-
     startRace() {
         this._animationService.stopAnimation();
-        this._player.setTexture(this.textures[this.trackIndex]);
-        this._player.setBike(this.bikes[this.trackIndex]);
+        this._player.setChosenBike(this.loaderList[this.trackIndex]);
         this._router.navigate(['/game']);
     }
 
+    onKeyDown(event: KeyboardEvent) {
+        if (event.key == 'a' || event.keyCode == 37) {
+            this.nextBike(true);
+        } else if (event.key == 'd' || event.keyCode == 39) {
+            this.nextBike(false);
+        } else if (event.keyCode == 13) {
+            this.startRace();
+        }
+    }
 }

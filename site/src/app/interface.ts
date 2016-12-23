@@ -33,9 +33,7 @@ export interface IPlayerObject {
     rotation : IVector
     acceleration : number
     name : string
-    bike : string
-    bikeTexture : string
-    speed : ISpeedObject
+    bike : IBike
 }
 
 export interface IVector {
@@ -62,4 +60,61 @@ export interface IHomePageModel {
     password: string
     passwordCheck: string
     email: string
+    showLoginError : boolean,
+    showLoginLoading  : boolean,
+    errorMessage: any,
+    loginError: string,
+}
+
+export interface IGameStats {
+    Won : number,
+    Played : number,
+    badges : [string]
+}
+
+export interface IItemStatList {
+    Speed: number,
+    Acceleration: number,
+    ShieldProtection : number,
+    ShieldRechargeRate : number,
+    GunDamage : number,
+    FireRate : number
+}
+
+export interface IUnlockedItem {
+    Name : string,
+    Stats : IItemStatList
+    FilePath : string,
+    Description : string,
+
+}
+
+export interface IUnlockables {
+    Bikes : IUnlockedItem[],
+    Textures : IUnlockedItem[],
+    Guns : IUnlockedItem[]
+}
+
+export interface IUser {
+    CreatedAt : string
+    UpdatedAt : string,
+    UserName: string,
+    Password: string,
+    Email: string,
+    GameStats: IGameStats,
+    Unlockables : IUnlockables
+}
+
+export interface IBikeStats {
+    Acceleration : number
+    MaxSpeed : number
+    Shield : number
+    ShieldRechargeRate : number
+}
+
+export interface IBike {
+    Texture: string
+    Bike : string
+    Name : string
+    Stats : IBikeStats
 }

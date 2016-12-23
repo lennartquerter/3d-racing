@@ -1,4 +1,4 @@
-import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "../interface";
+import {IKeyPress, IGravityCheckReturn, IPlayerObject, IBike, ISpeedObject} from "../interface";
 import {Injectable} from "@angular/core";
 
 @Injectable()
@@ -6,42 +6,61 @@ export class UpdateService {
     acceleration: number = 0;
 
     accelerationLevels = {
-        afterMaxSpeed : 0.0018,
+        afterMaxSpeed: 0.0025,
         slowDown: 0.00125,
-        level1 : 0.01,
-        level2 : 0.015,
-        level3 : 0.02,
-        level4 : 0.025,
-        level5 : 0.03,
+        level1: 0.01,
+        level2: 0.015,
+        level3: 0.02,
+        level4: 0.025,
+        level5: 0.03,
     };
 
 
+    speed: ISpeedObject = {
+        forward: 7,
+        ultamateforward: 10,
+        backwards: -1.4
+    };
 
-    generalCarSpeedMultiplier: number =  1000;
+
+    generalCarSpeedMultiplier: number = 4000;
+
     direction = {
         X: 0,
         Z: 0,
-        Y : 0,
+        Y: 0,
     };
 
     constructor() {
 
     }
 
-    public init() {
+    public init(bike: IBike) {
+        this.generalCarSpeedMultiplier = bike.Stats.Acceleration * 4;
+        this.speed.ultamateforward = bike.Stats.MaxSpeed / 100;
+        this.speed.forward = bike.Stats.Acceleration / 100;
+        console.log("setup");
+        console.log(this.speed.ultamateforward);
+
     }
 
     public reset() {
         this.acceleration = 0;
     }
 
-    public update(car :any, camera :any, currentPlayer: IPlayerObject, keys: IKeyPress, dt :number, drag: IGravityCheckReturn) {
+    public update(car: any, camera: any, currentPlayer: IPlayerObject, keys: IKeyPress, dt: number, drag: IGravityCheckReturn) {
         const step = dt * this.generalCarSpeedMultiplier;
         this.direction = {
             X: 0,
             Z: 0,
             Y: 0,
         };
+
+        // console.log(this.speed.forward);
+        // console.log(this.speed.ultamateforward);
+        // console.log(currentPlayer.acceleration);
+        // console.log(currentPlayer.position.x);
+        // console.log(currentPlayer.position.z);
 
         if (drag.g > 1) {
             currentPlayer.acceleration -= this.accelerationLevels.level3;
@@ -57,23 +76,23 @@ export class UpdateService {
         }
 
         if (keys.UP) {
-            if (currentPlayer.acceleration < currentPlayer.speed.forward) {
+            if (currentPlayer.acceleration < this.speed.forward) {
                 if (currentPlayer.acceleration < 0) {
                     currentPlayer.acceleration += this.accelerationLevels.level5;
                 } else {
                     if (currentPlayer.acceleration < 7) {
-                        currentPlayer.acceleration +=this.accelerationLevels.level2;
+                        currentPlayer.acceleration += this.accelerationLevels.level2;
                     }
                     if (currentPlayer.acceleration < 4) {
                         currentPlayer.acceleration += this.accelerationLevels.level3
                     }
                 }
-            } else if (currentPlayer.acceleration < currentPlayer.speed.ultamateforward) {
-                    currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
+            } else if (currentPlayer.acceleration < this.speed.ultamateforward) {
+                currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
             }
         }
         if (keys.DOWN) {
-            if (currentPlayer.acceleration > currentPlayer.speed.backwards) {
+            if (currentPlayer.acceleration > this.speed.backwards) {
                 if (currentPlayer.acceleration > 0) {
                     currentPlayer.acceleration -= this.accelerationLevels.level5
                 } else {
@@ -83,10 +102,10 @@ export class UpdateService {
         }
 
         if (keys.LEFT) {
-            car.rotateY(0.02);
+            car.rotateY(0.04);
         }
         if (keys.RIGHT) {
-            car.rotateY(-0.02);
+            car.rotateY(-0.04);
         }
 
         if (parseInt(Math.cos(car.rotation.z).toFixed(0)) > -1) {

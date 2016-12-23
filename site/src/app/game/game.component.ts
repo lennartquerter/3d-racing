@@ -1,5 +1,3 @@
-/// <reference path="../../../../typings/index.d.ts" />
-
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
 import {UpdateService} from "../services/update.service";
 import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "../interface";
@@ -14,6 +12,8 @@ import {WebSocketService} from "../services/webSocket.service";
 import {Subscription} from "rxjs";
 import {AnimationService} from "../services/animation.service";
 import {PlayerService} from "../services/player.service";
+import {ApiService} from "../services/api.service";
+
 
 
 @Component({
@@ -21,6 +21,7 @@ import {PlayerService} from "../services/player.service";
     templateUrl: './game.component.html',
 })
 export class GameComponent {
+
     gui = {
         gravity : 0,
         lapTime : 0
@@ -36,7 +37,8 @@ export class GameComponent {
     general = {
         dt : 0,
         last : 0,
-        frame : 0
+        frame : 0,
+        fps: 0
     };
 
     keys : IKeyPress = {
@@ -59,7 +61,6 @@ export class GameComponent {
     currentPlayer : IPlayerObject; // is the object of the player state
     connectedPlayers : IPlayerObject[] = [];
 
-
     scene: any = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
     renderer = new THREE.WebGLRenderer();
@@ -68,6 +69,7 @@ export class GameComponent {
 
     //setup webSocket service;
     private _socketService: WebSocketService = new WebSocketService();
+    private _animationService : AnimationService = new AnimationService();
 
     constructor(private _updateService: UpdateService,
                 private _lightService: LightService,
@@ -75,9 +77,10 @@ export class GameComponent {
                 private _physicsService: PhysicsService,
                 private _keyService: KeyService,
                 private _multiplayerService: MultiplayerService,
-                private _animationService: AnimationService,
                 private _player: PlayerService,
-                private _skyBoxService: SkyBoxService) {
+                private _skyBoxService: SkyBoxService,
+                private _apiService: ApiService
+    ) {
 
     }
 
@@ -116,12 +119,12 @@ export class GameComponent {
     ngOnInit() {
         this.setupSubscriptions();
         this.setupCurrentPlayer();
+        this._updateService.init(this.currentPlayer.bike);
 
         //connect to game and load level:
-        this._socketService.connectToGame(this.currentPlayer)
+        this._socketService.connectToGame(this.currentPlayer, this._apiService.getToken())
             .then((res : any) => {
                 this.connectedPlayers = res.playerList;
-                console.log(res);
                 this.currentPlayer.ID = res.ID;
                 if (this.connectedPlayers.length > 0) {
                     console.log('there are other players in scene');
@@ -150,15 +153,9 @@ export class GameComponent {
                 y: 0,
                 z: 0
             },
-            speed : {
-                forward : 7,
-                ultamateforward : 10,
-                backwards : -1.4
-            },
             acceleration: 0,
             name : "test2",
-            bike : this._player.getBike(),
-            bikeTexture : this._player.getTexture()
+            bike : this._player.getBike()
         };
     }
 
@@ -196,7 +193,7 @@ export class GameComponent {
         this.light = this._lightService.addAmbientLight(0xddbfbf);
         this.pointLight = this._lightService.addPointLight();
 
-        this._loader.loadOBJ(this.currentPlayer.bike, this.currentPlayer.bikeTexture).then(
+        this._loader.loadOBJ(this.currentPlayer.bike.Bike, this.currentPlayer.bike.Texture, "bike").then(
             (res: THREE.Object3D) => {
                 res.name = "player";
                 this.player = res;
@@ -206,7 +203,7 @@ export class GameComponent {
 
         const level = require("../../../assets/objects/level_lennart_2.obj");
         const levelText = require("../../../assets/textures/tron-02.jpg");
-        this._loader.loadOBJ(level, levelText).then(
+        this._loader.loadOBJ(level, levelText, "level").then(
             (res: THREE.Object3D) => {
                 res.name = "model";
                 this.level = res;
@@ -232,6 +229,7 @@ export class GameComponent {
             if (!this.loaded[x]) ready = false;
         }
         if (ready) {
+            console.log("loaded");
             this.setup();
         }
     }
@@ -262,7 +260,6 @@ export class GameComponent {
         this.addBoundingBoxesToScene();
         this._canvas.nativeElement.appendChild(this.renderer.domElement);
         this._physicsService.setupGravity(this.scene);
-
         this._animationService.startAnimation();
     }
 

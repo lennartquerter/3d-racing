@@ -1,33 +1,36 @@
 import {Injectable} from "@angular/core";
+import {IBike, IUser} from "../interface";
 @Injectable()
 export class PlayerService {
-    texture : string = require("../../../assets/textures/tron-01.jpg");
-    bike : string = require("../../../assets/objects/bike_2.obj");
-    name : string;
+    bike : IBike;
+    user : IUser = null;
 
 
-    setTexture(t : string) {
-        this.texture = t
+    setChosenBike(b : IBike) {
+        this.bike = b;
     }
 
-    getTexture() {
-        return this.texture
+    setUser(user : IUser) {
+        this.user = user;
     }
 
-    setBike(b : string) {
-        this.bike = b
-    }
+    getBike() : IBike {
 
-    getBike() {
-        return this.bike
-    }
+        if (this.bike) {
+            return this.bike
+        } else {
+            return {
+                Texture: require("../../../assets/textures/tron-01.jpg"),
+                Bike :require("../../../assets/objects/bike_2.obj"),
+                Name : 'bike-01',
+                Stats : {
+                    Acceleration : 700,
+                    MaxSpeed : 1000,
+                    Shield : 500,
+                    ShieldRechargeRate : 100
+                }
+            }
+        }
 
-    setName(n : string) {
-        this.name = n;
     }
-
-    getName() {
-        return this.name
-    }
-
 }

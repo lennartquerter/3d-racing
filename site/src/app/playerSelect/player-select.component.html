@@ -1,6 +1,12 @@
 <div #canvas class="main">
     <div class="gui">
-        <button (click)="nextBike()" >Next Bike</button>
-        <button (click)="startRace()" >Start Race</button>
+        <h3 class="title" style="color:white">Press 'ENTER' to start race</h3>
+
+        <div class="stats" style="color:white">
+            <p>Acceleration : {{guiStats.Acceleration}}</p>
+            <p>Max speed : {{guiStats.MaxSpeed}}</p>
+            <p>Shield : {{guiStats.Shield}}</p>
+            <p>Shield recharge Rate : {{guiStats.ShieldRechargeRate}}</p>
+        </div>
     </div>
 </div>

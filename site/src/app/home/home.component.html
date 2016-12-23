@@ -95,22 +95,27 @@
                             </p>
                             <label class="label">Password</label>
                             <p class="control">
-                                <input class="input" type="text" placeholder="" [(ngModel)]="model.password">
+                                <input class="input" type="password" placeholder="" [(ngModel)]="model.password">
                             </p>
-                            <span *ngIf="showRegister">
-                            <label class="label">Password check</label>
-                            <p class="control">
-                                <input class="input" type="text" placeholder="" [(ngModel)]="model.passwordcheck">
-                            </p>
-                            <label class="label">Email</label>
-                            <p class="control">
-                                <input class="input" type="text" placeholder="" [(ngModel)]="model.email">
-                            </p>
-                        </span>
+                            <div *ngIf="showLoginError">
+                                <p style="color: red">{{loginError}}</p>
+                            </div>
 
-                            <button class="button is-primary" (click)="login()">Login</button>
-                            <button class="button is-primary" (click)="showRegister = !showRegister">Register</button>
-                            <button class="button is-primary" (click)="selectBike()">StartDevGame</button>
+                            <span *ngIf="showRegister">
+                                <label class="label">Password check</label>
+                                <p class="control">
+                                    <input class="input" type="password" placeholder="" [(ngModel)]="model.passwordCheck">
+                                </p>
+                                <label class="label">Email</label>
+                                <p class="control">
+                                    <input class="input" type="text" placeholder="" [(ngModel)]="model.email">
+                                </p>
+                            </span>
+
+                            <button class="button is-primary" *ngIf="!showRegister" (click)="login()">Login</button>
+                            <button class="button is-primary" *ngIf="showRegister" (click)="showRegister = !showRegister">Login</button>
+                            <button class="button is-primary" *ngIf="showRegister" (click)="register()">Register</button>
+                            <button class="button is-primary" *ngIf="!showRegister" (click)="showRegister = !showRegister">Register</button>
                         </div>
                     </div>
                 </article>
