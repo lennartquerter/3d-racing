@@ -1,7 +1,7 @@
 import {Component, ViewChild, ElementRef, HostListener} from "@angular/core";
 import {AnimationService} from "../services/animation.service";
 import {Subscription} from "rxjs";
-import {IGeneralObject, IBike} from "../interface";
+import {IGeneralObject, IBike, IBikeStats} from "../interface";
 import {LightService} from "../services/light.service";
 import {SkyBoxService} from "../services/skybox.service";
 import {LoaderService} from "../services/loader.service";
@@ -47,7 +47,8 @@ export class PlayerSelectComponent {
                 Acceleration : 700,
                 MaxSpeed : 1000,
                 Shield : 500,
-                ShieldRechargeRate : 100
+                ShieldRechargeRate : 100,
+                Handeling: 0.034
             }
         },
         {
@@ -58,7 +59,8 @@ export class PlayerSelectComponent {
                 Acceleration : 800,
                 MaxSpeed : 900,
                 Shield : 400,
-                ShieldRechargeRate : 130
+                ShieldRechargeRate : 130,
+                Handeling: 0.042
             }
         },
         {
@@ -69,7 +71,8 @@ export class PlayerSelectComponent {
                 Acceleration : 500,
                 MaxSpeed : 1200,
                 Shield : 300,
-                ShieldRechargeRate : 180
+                ShieldRechargeRate : 180,
+                Handeling: 0.038
             }
         },
         {
@@ -80,12 +83,13 @@ export class PlayerSelectComponent {
                 Acceleration : 1000,
                 MaxSpeed : 1400,
                 Shield : 700,
-                ShieldRechargeRate : 250
+                ShieldRechargeRate : 250,
+                Handeling: 0.045
             }
         }
     ];
 
-    guiStats : any = this.loaderList[0].Stats;
+    guiStats : IBikeStats = this.loaderList[0].Stats;
 
     @ViewChild("canvas") _canvas: ElementRef;
 

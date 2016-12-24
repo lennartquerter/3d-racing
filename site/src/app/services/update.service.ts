@@ -19,7 +19,8 @@ export class UpdateService {
     speed: ISpeedObject = {
         forward: 7,
         ultamateforward: 10,
-        backwards: -1.4
+        backwards: -1.4,
+        handeling : 0.04
     };
 
 
@@ -39,9 +40,7 @@ export class UpdateService {
         this.generalCarSpeedMultiplier = bike.Stats.Acceleration * 4;
         this.speed.ultamateforward = bike.Stats.MaxSpeed / 100;
         this.speed.forward = bike.Stats.Acceleration / 100;
-        console.log("setup");
-        console.log(this.speed.ultamateforward);
-
+        this.speed.handeling = bike.Stats.Handeling;
     }
 
     public reset() {
@@ -56,13 +55,7 @@ export class UpdateService {
             Y: 0,
         };
 
-        // console.log(this.speed.forward);
-        // console.log(this.speed.ultamateforward);
-        // console.log(currentPlayer.acceleration);
-        // console.log(currentPlayer.position.x);
-        // console.log(currentPlayer.position.z);
-
-        if (drag.g > 1) {
+        if (drag.g > 1 && currentPlayer.acceleration > 0 ) {
             currentPlayer.acceleration -= this.accelerationLevels.level3;
         } else if (drag.g < -1) {
             currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
@@ -102,16 +95,16 @@ export class UpdateService {
         }
 
         if (keys.LEFT) {
-            car.rotateY(0.04);
+            car.rotateY(this.speed.handeling);
         }
         if (keys.RIGHT) {
-            car.rotateY(-0.04);
+            car.rotateY(-this.speed.handeling);
         }
 
         if (parseInt(Math.cos(car.rotation.z).toFixed(0)) > -1) {
             this.direction.Z = step * currentPlayer.acceleration * Math.cos(car.rotation.y);
         } else {
-            this.direction.Z = step * currentPlayer.acceleration * -Math.cos(car.rotation.y);
+            this.direction.Z = step * currentPlayer.acceleration * - Math.cos(car.rotation.y);
         }
 
         this.direction.X = step * currentPlayer.acceleration * Math.sin(car.rotation.y);
@@ -127,8 +120,6 @@ export class UpdateService {
         camera.quaternion.slerp(car.quaternion, 0.1);
         camera.position.y = car.position.y + 200;
     }
-
-
 }
 
 /*

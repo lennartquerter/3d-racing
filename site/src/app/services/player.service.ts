@@ -27,7 +27,8 @@ export class PlayerService {
                     Acceleration : 700,
                     MaxSpeed : 1000,
                     Shield : 500,
-                    ShieldRechargeRate : 100
+                    ShieldRechargeRate : 100,
+                    Handeling: 0.04
                 }
             }
         }

@@ -51,7 +51,8 @@ export interface IGeneralObject {
 export interface ISpeedObject {
     forward : number
     ultamateforward : number,
-    backwards : number
+    backwards : number,
+    handeling : number
 }
 
 
@@ -109,7 +110,8 @@ export interface IBikeStats {
     Acceleration : number
     MaxSpeed : number
     Shield : number
-    ShieldRechargeRate : number
+    ShieldRechargeRate : number,
+    Handeling : number
 }
 
 export interface IBike {

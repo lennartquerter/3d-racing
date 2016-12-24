@@ -201,7 +201,7 @@ export class GameComponent {
             }
         );
 
-        const level = require("../../../assets/objects/level_lennart_2.obj");
+        const level = require("../../../assets/objects/lennart_level_06.obj");
         const levelText = require("../../../assets/textures/tron-02.jpg");
         this._loader.loadOBJ(level, levelText, "level").then(
             (res: THREE.Object3D) => {
@@ -270,6 +270,7 @@ export class GameComponent {
     }
 
     addObjectsToScene() {
+        this.player.position.y = 100;
         this.scene.add( this.player );
         this.scene.add( this.level );
         this.scene.add( this.light );
@@ -282,7 +283,7 @@ export class GameComponent {
         const material2 = new THREE.MeshBasicMaterial();
         material2.visible = false;
         const cube2 = new THREE.Mesh( geometry2, material2 );
-        cube2.position.y = -2000;
+        cube2.position.y = -8000;
         cube2.name = "death";
         this.scene.add( cube2 );
     }

@@ -26,12 +26,11 @@ export class ApiComponent {
                 console.log('user ' + userCred[0] + ' not found or error:' + err);
                 res.send({status: 404, data: "Not found"})
             }
-            console.log(user);
             if (!user) {
                 console.log('user ' + userCred[0] + ' not found');
-                res.send({status: 404, data: "Not found"})
+                res.send({status: 404, data: "Not found"});
+                return;
             }
-
             user.comparePassword(userCred[1], function(err, isMatch) {
                 if (err) {
                     console.log('user ' + userCred[0] + ' not password compare error:' + err);
@@ -41,9 +40,11 @@ export class ApiComponent {
                     const token = new Buffer(user.UserName + "::" + user.Password, 'base64').toString();
                     delete user.Password;
                     res.send({status: 200, data: {user : user, token : token}})
+                    return;
                 } else {
-                    res.send({status: 403, data: "Password does not match"})
+                    res.send({status: 403, data: "Password does not match"});
                 }
+
             });
         });
     }

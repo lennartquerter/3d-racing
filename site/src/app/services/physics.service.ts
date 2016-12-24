@@ -48,7 +48,9 @@ export class PhysicsService {
     distanceAbove : number = 0;
     distanceBelow : number = 0;
 
-    fallTime : number = 0;
+    fallTime : number = 1;
+
+
     intersect:boolean = false;
 
 
@@ -60,6 +62,7 @@ export class PhysicsService {
                 this.level = new THREE.Mesh(scene.children[x].children[0].geometry, material);
                 this.level.position.y = 0;
                 // scene.add(this.level);
+                // console.log(this.level);
                 this.collidableMeshList.push(this.level);
 
             }
@@ -73,10 +76,10 @@ export class PhysicsService {
         this.startLine = new THREE.Mesh( geometry, material );
         this.startLine.position.z = 1250;
         // scene.add( this.startLine );
-
     }
 
     previousOutcome : number = 0;
+    fallAcceleration : number = 7.8;
 
     GravityCheck(player: THREE.Object3D, camera : THREE.Camera): IGravityCheckReturn {
         const playerBB = new THREE.Box3().setFromObject(player);
@@ -88,22 +91,28 @@ export class PhysicsService {
         this.distanceBelow = parseFloat(this.distanceBelow.toFixed(2));
 
         //check for distance between the road and object
-
-        if (this.distanceAbove <= 1) {
-            outcome -= this.distanceAbove * 1.2;
-        } else if (this.distanceAbove > 1) {
-            outcome += this.distanceAbove * 1.2;
-        }
-        if (this.distanceBelow <= 1) {
-            outcome += this.distanceBelow * 0.4;
-        } else if (this.distanceBelow > 1) {
-            outcome -= this.distanceBelow * 0.4;
-        }
-
         if (!this.intersect) {
-            //g * m / d
-            outcome -= (50000 / (player.position.y - this.deathBB.min.y));
+            outcome -= ((this.fallAcceleration * 100000000) / Math.pow((player.position.y - this.deathBB.min.y), 2) );
+            console.log(outcome);
         }
+
+        if (this.distanceAbove > 6) {
+            outcome += this.distanceAbove;
+        } else if (this.distanceAbove > 3) {
+            outcome += 2;
+        }
+
+        if (this.distanceBelow > 6) {
+            outcome -= this.distanceBelow / 2
+        } else if (this.distanceBelow > 3) {
+            outcome -= 2
+        }
+
+        //check for cheats
+        if (player.position.y > 5000) {
+            outcome = -10000
+        }
+
         //change cam dir when going up or down
         if (this.previousOutcome - player.position.y > 2) {
             camera.rotateX(-0.01)
@@ -117,6 +126,7 @@ export class PhysicsService {
             outcome = 0;
         }
         player.position.y += outcome;
+
         return {d: death, g: outcome, lt: laptime}
     }
 

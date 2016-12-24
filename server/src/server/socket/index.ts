@@ -5,7 +5,7 @@ export class Sockets {
 
     gameConnect(data, fn, socket, playerList) {
         console.log("gameConnect");
-        console.dir(data);
+        // console.dir(data);
         if (!data.token) {
             console.log("no token");
             fn({data: "NO TOKEN", status: 403});
@@ -54,8 +54,6 @@ export class Sockets {
     }
 
     disconnect(player, fn, socket, playerList) {
-        console.log(playerList);
-        console.log('disconnect' + socket.id);
         if (playerList) {
             console.log(playerList.length);
             for (let x in playerList) {
