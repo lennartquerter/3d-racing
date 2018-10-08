@@ -1,31 +1,29 @@
-import { Observable } from 'rxjs';
-import {Injectable, Inject} from "@angular/core";
+import {Observable} from 'rxjs';
+import {Injectable} from "@angular/core";
 import {IPlayerObject} from "../interface";
 import * as io from "socket.io-client";
-import {ApiService} from "./api.service";
 
 @Injectable()
 export class WebSocketService {
-    socket : SocketIOClient.Socket;
+    socket: any;
 
-    constructor(
-    ) {
-        this.socket = io.connect('localhost:9900');
+    constructor() {
+        // this.socket = io.connect('localhost:9900');
     }
 
     ngOnInit() {
-        this.socket.on('connect_error', function() {
+        this.socket.on('connect_error', function () {
             console.log('Connection failed');
         });
-        this.socket.on('reconnect_failed', function() {
+        this.socket.on('reconnect_failed', function () {
             console.log('Reconnection failed');
         });
     }
 
 
-    sendPlayerPosition(position : IPlayerObject) {
+    sendPlayerPosition(position: IPlayerObject) {
         return new Promise((resolve, reject) => {
-            this.socket.emit('playerPosition', position,(data :any) => {
+            this.socket.emit('playerPosition', position, (data: any) => {
                 if (data.error) {
                     console.log((`Errored on send player position : ${data.error}`));
                     reject(`Errored on send player position : ${data.error}`)
@@ -35,8 +33,8 @@ export class WebSocketService {
         })
     }
 
-    getPlayerPositions() : any {
-        let observable = new Observable((observer : any) => {
+    getPlayerPositions(): any {
+        let observable = new Observable((observer: any) => {
             this.socket.on('positionUpdate', (player: IPlayerObject[]) => {
                 observer.next(player);
             });
@@ -47,9 +45,9 @@ export class WebSocketService {
         return observable;
     }
 
-    onDisconnect() : any {
-        let observable = new Observable((observer : any) => {
-            this.socket.on('disconnectedPlayer', (data : any) => {
+    onDisconnect(): any {
+        let observable = new Observable((observer: any) => {
+            this.socket.on('disconnectedPlayer', (data: any) => {
                 console.log('socket: disconnect');
                 observer.next(data.ID);
             });
@@ -60,8 +58,8 @@ export class WebSocketService {
         return observable;
     }
 
-    getNewPlayer() : any {
-        let observable = new Observable((observer : any) => {
+    getNewPlayer(): any {
+        let observable = new Observable((observer: any) => {
             this.socket.on('newPlayer', (player: any) => {
                 observer.next(player.player);
             });
@@ -72,16 +70,16 @@ export class WebSocketService {
         return observable;
     }
 
-    connectToGame(player : IPlayerObject, token: string) : any {
+    connectToGame(player: IPlayerObject, token: string): any {
         const data = {
-            player : player,
-            token : token
+            player: player,
+            token: token
         };
 
         console.log(data);
 
         return new Promise((resolve, reject) => {
-            this.socket.emit('gameConnect', data,(data :any) => {
+            this.socket.emit('gameConnect', data, (data: any) => {
                 resolve(data);
             })
         })

@@ -8,6 +8,9 @@ import {LoaderService} from "../services/loader.service";
 import {Router} from "@angular/router";
 import {PlayerService} from "../services/player.service";
 
+
+import * as THREE from 'three'
+
 @Component({
     selector: 'player-select',
     templateUrl: './player-select.component.html',
@@ -18,97 +21,98 @@ export class PlayerSelectComponent {
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
     renderer = new THREE.WebGLRenderer();
 
-    trackingBike : THREE.Vector3 = new THREE.Vector3(0,0,0);
-    bikeList : THREE.Object3D[] = [];
+    trackingBike: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+    bikeList: THREE.Object3D[] = [];
     trackIndex = 0;
 
     t = 0;
 
-    light : THREE.Light;
-    pointLightList : THREE.Light[] = [];
-    skyBox : THREE.Object3D;
+    light: THREE.Light;
+    pointLightList: THREE.Light[] = [];
+    skyBox: THREE.Object3D;
 
     loaded = {
         skybox: false
     };
 
-    general : IGeneralObject = {
+    general: IGeneralObject = {
         dt: 0,
         last: 0,
         frame: 0
     };
 
-    loaderList : IBike[] = [
+    loaderList: IBike[] = [
         {
-            Texture: require("../../../assets/textures/tron-01.jpg"),
-            Bike :require("../../../assets/objects/bike_2.obj"),
-            Name : 'bike-01',
-            Stats : {
-                Acceleration : 700,
-                MaxSpeed : 1000,
-                Shield : 500,
-                ShieldRechargeRate : 100,
+            Texture: "../../assets/textures/tron-01.jpg",
+            Bike: "../../assets/objects/bike_2.obj",
+            Name: 'bike-01',
+            Stats: {
+                Acceleration: 700,
+                MaxSpeed: 1000,
+                Shield: 500,
+                ShieldRechargeRate: 100,
                 Handeling: 0.034
             }
         },
         {
-            Texture: require("../../../assets/textures/tron-02.jpg"),
-            Bike :require("../../../assets/objects/bike_2.obj"),
-            Name : 'bike-02',
-            Stats : {
-                Acceleration : 800,
-                MaxSpeed : 900,
-                Shield : 400,
-                ShieldRechargeRate : 130,
+            Texture: "../../../assets/textures/tron-02.jpg",
+            Bike: "../../../assets/objects/bike_2.obj",
+            Name: 'bike-02',
+            Stats: {
+                Acceleration: 800,
+                MaxSpeed: 900,
+                Shield: 400,
+                ShieldRechargeRate: 130,
                 Handeling: 0.042
             }
         },
         {
-            Texture: require("../../../assets/textures/tron-03.jpg"),
-            Bike :require("../../../assets/objects/bike_2.obj"),
-            Name : 'bike-03',
-            Stats : {
-                Acceleration : 500,
-                MaxSpeed : 1200,
-                Shield : 300,
-                ShieldRechargeRate : 180,
+            Texture: "../../../assets/textures/tron-03.jpg",
+            Bike: "../../../assets/objects/bike_2.obj",
+            Name: 'bike-03',
+            Stats: {
+                Acceleration: 500,
+                MaxSpeed: 1200,
+                Shield: 300,
+                ShieldRechargeRate: 180,
                 Handeling: 0.038
             }
         },
         {
-            Texture: require("../../../assets/textures/tron-04.jpg"),
-            Bike :require("../../../assets/objects/bike_2.obj"),
-            Name : 'bike-04',
-            Stats : {
-                Acceleration : 1000,
-                MaxSpeed : 1400,
-                Shield : 700,
-                ShieldRechargeRate : 250,
+            Texture: "../../../assets/textures/tron-04.jpg",
+            Bike: "../../../assets/objects/bike_2.obj",
+            Name: 'bike-04',
+            Stats: {
+                Acceleration: 1000,
+                MaxSpeed: 1400,
+                Shield: 700,
+                ShieldRechargeRate: 250,
                 Handeling: 0.045
             }
         }
     ];
 
-    guiStats : IBikeStats = this.loaderList[0].Stats;
+    guiStats: IBikeStats = this.loaderList[0].Stats;
 
     @ViewChild("canvas") _canvas: ElementRef;
 
-    animateSubscription : Subscription;
+    animateSubscription: Subscription;
 
     @HostListener('document:keydown', ['$event'])
     handleKeyDown(event: KeyboardEvent) {
         this.onKeyDown(event);
     }
 
-    private _animationService : AnimationService = new AnimationService();
+    private _animationService: AnimationService = new AnimationService();
 
     constructor(
-        private _lightService : LightService,
-        private _loader : LoaderService,
-        private _skyBoxService : SkyBoxService,
-        private _player : PlayerService,
-        private _router : Router
-    ) {}
+        private _lightService: LightService,
+        private _loader: LoaderService,
+        private _skyBoxService: SkyBoxService,
+        private _player: PlayerService,
+        private _router: Router
+    ) {
+    }
 
     ngOnInit() {
         this.loader();
@@ -116,7 +120,7 @@ export class PlayerSelectComponent {
             this.loaded[this.loaderList[x].Name] = false;
         }
 
-        this.animateSubscription = this._animationService.animation().subscribe((generalObject : IGeneralObject) => {
+        this.animateSubscription = this._animationService.animation().subscribe((generalObject: IGeneralObject) => {
             this.general = generalObject;
             this.render();
         });
@@ -146,7 +150,7 @@ export class PlayerSelectComponent {
     }
 
     //handles async loading on components
-    handleLoaded(loadType : string) {
+    handleLoaded(loadType: string) {
         this.loaded[loadType] = true;
         let ready = true;
 
@@ -166,7 +170,7 @@ export class PlayerSelectComponent {
         this.camera.position.y = 175;
 
         this.skyBox.position.copy(this.camera.position);
-        this.scene.add( this.skyBox );
+        this.scene.add(this.skyBox);
 
         //bikes
         this.initBikes();
@@ -176,7 +180,7 @@ export class PlayerSelectComponent {
             this.pointLightList[x].position.copy(this.bikeList[x].position);
             this.pointLightList[x].position.y = 3000;
             this.pointLightList[x].lookAt(this.bikeList[x].position);
-            this.scene.add( this.pointLightList[x] );
+            this.scene.add(this.pointLightList[x]);
         }
         //renderer size
 
@@ -205,18 +209,18 @@ export class PlayerSelectComponent {
 
         //cilinders:
 
-        const geometry = new THREE.CylinderGeometry( 300, 300, 20, 128 );
-        const material = new THREE.MeshBasicMaterial( {color: 0x4c4c4c} );
+        const geometry = new THREE.CylinderGeometry(300, 300, 20, 128);
+        const material = new THREE.MeshBasicMaterial({color: 0x4c4c4c});
         for (let x in this.bikeList) {
-            const cylinder = new THREE.Mesh( geometry, material );
+            const cylinder = new THREE.Mesh(geometry, material);
             cylinder.position.copy(this.bikeList[x].position);
             cylinder.position.y = -20;
-            this.scene.add( cylinder );
-            this.scene.add( this.bikeList[x]);
+            this.scene.add(cylinder);
+            this.scene.add(this.bikeList[x]);
         }
     }
 
-    nextBike(selectDirection : boolean) {
+    nextBike(selectDirection: boolean) {
         if (selectDirection) {
             if (this.trackIndex < this.bikeList.length - 1) this.trackIndex++;
             else this.trackIndex = 0;

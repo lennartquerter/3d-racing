@@ -1,7 +1,8 @@
 import {IGravityCheckReturn} from "../interface";
-import Vector3 = THREE.Vector3;
-const moment = require('moment');
 import {Injectable} from "@angular/core";
+
+import * as THREE from 'three'
+import * as moment from 'moment';
 
 @Injectable()
 
@@ -10,7 +11,7 @@ export class PhysicsService {
     groundList: THREE.Box3[] = [];
     deathBB: THREE.Box3;
     level: THREE.Mesh;
-    startLine : THREE.Mesh;
+    startLine: THREE.Mesh;
     startTime: moment.Moment;
 
     collidableMeshList: THREE.Mesh[] = [];
@@ -45,13 +46,13 @@ export class PhysicsService {
 
     caster: THREE.Raycaster = new THREE.Raycaster();
 
-    distanceAbove : number = 0;
-    distanceBelow : number = 0;
+    distanceAbove: number = 0;
+    distanceBelow: number = 0;
 
-    fallTime : number = 1;
+    fallTime: number = 1;
 
 
-    intersect:boolean = false;
+    intersect: boolean = false;
 
 
     setupGravity(scene: THREE.Scene) {
@@ -59,7 +60,7 @@ export class PhysicsService {
         for (let x in scene.children) {
             if (scene.children[x].name == 'model') {
                 const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-                this.level = new THREE.Mesh(scene.children[x].children[0].geometry, material);
+                // this.level = new THREE.Mesh(scene.children[x].children[0].geometry, material);
                 this.level.position.y = 0;
                 // scene.add(this.level);
                 // console.log(this.level);
@@ -71,20 +72,20 @@ export class PhysicsService {
             }
         }
 
-        const geometry = new THREE.BoxGeometry( 2500, 2500, 1 );
-        const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        this.startLine = new THREE.Mesh( geometry, material );
+        const geometry = new THREE.BoxGeometry(2500, 2500, 1);
+        const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+        this.startLine = new THREE.Mesh(geometry, material);
         this.startLine.position.z = 1250;
         // scene.add( this.startLine );
     }
 
-    previousOutcome : number = 0;
-    fallAcceleration : number = 7.8;
+    previousOutcome: number = 0;
+    fallAcceleration: number = 7.8;
 
-    GravityCheck(player: THREE.Object3D, camera : THREE.Camera): IGravityCheckReturn {
+    GravityCheck(player: THREE.Object3D, camera: THREE.Camera): IGravityCheckReturn {
         const playerBB = new THREE.Box3().setFromObject(player);
         let death = (playerBB.min.y < this.deathBB.max.y);
-        const laptime =  this.checkForCollision(player);
+        const laptime = this.checkForCollision(player);
         let outcome = 0;
 
         this.distanceAbove = parseFloat(this.distanceAbove.toFixed(2));
@@ -92,31 +93,32 @@ export class PhysicsService {
 
         //check for distance between the road and object
         if (!this.intersect) {
-            outcome -= ((this.fallAcceleration * 100000000) / Math.pow((player.position.y - this.deathBB.min.y), 2) );
-            console.log(outcome);
+            outcome -= ((this.fallAcceleration * 100000000) / Math.pow((player.position.y - this.deathBB.min.y), 2));
+            console.log('!intersect');
         }
 
-        if (this.distanceAbove > 6) {
+        // console.log(this.distanceBelow);
+
+        if (this.distanceAbove > 2) {
+            console.log('above:' + this.distanceAbove);
             outcome += this.distanceAbove;
-        } else if (this.distanceAbove > 3) {
-            outcome += 2;
+            // } else if (this.distanceAbove > 3) {
+            //     outcome += 2;
+            // }
         }
 
-        if (this.distanceBelow > 6) {
-            outcome -= this.distanceBelow / 2
-        } else if (this.distanceBelow > 3) {
-            outcome -= 2
+        if (this.distanceBelow > 2) {
+            outcome -= this.distanceBelow / 2;
         }
-
         //check for cheats
         if (player.position.y > 5000) {
-            outcome = -10000
+            outcome = -15000;
         }
 
         //change cam dir when going up or down
         if (this.previousOutcome - player.position.y > 2) {
             camera.rotateX(-0.01)
-        } else if (this.previousOutcome - player.position.y < -2){
+        } else if (this.previousOutcome - player.position.y < -2) {
             camera.rotateX(0.01)
         }
 
@@ -132,9 +134,9 @@ export class PhysicsService {
 
     checkForCollision(player: THREE.Object3D) {
         const distance = 128;
-        let collisions : any;
-        let i : number;
-        let startCollisions : any;
+        let collisions: any;
+        let i: number;
+        let startCollisions: any;
 
         this.intersect = false;
 
@@ -149,7 +151,7 @@ export class PhysicsService {
                 if (i == 13) {
                     this.intersect = true;
                     this.distanceBelow = collisions[0].distance;
-               }
+                }
             }
         }
         this.caster.set(player.position, this.rays[0]);
@@ -159,7 +161,7 @@ export class PhysicsService {
 
         }
         const afterLap = moment();
-        return moment.utc(moment(afterLap,"DD/MM/YYYY HH:mm:ss").diff(moment(this.startTime,"DD/MM/YYYY HH:mm:ss"))).seconds();
+        return moment.utc(moment(afterLap, "DD/MM/YYYY HH:mm:ss").diff(moment(this.startTime, "DD/MM/YYYY HH:mm:ss"))).seconds();
 
     }
 }

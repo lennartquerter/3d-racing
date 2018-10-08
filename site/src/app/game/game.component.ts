@@ -14,7 +14,7 @@ import {AnimationService} from "../services/animation.service";
 import {PlayerService} from "../services/player.service";
 import {ApiService} from "../services/api.service";
 
-
+import * as THREE from 'three'
 
 @Component({
     selector: 'game',
@@ -23,8 +23,8 @@ import {ApiService} from "../services/api.service";
 export class GameComponent {
 
     gui = {
-        gravity : 0,
-        lapTime : 0
+        gravity: 0,
+        lapTime: 0
         // bestLap : 100,
     };
 
@@ -35,31 +35,31 @@ export class GameComponent {
     };
 
     general = {
-        dt : 0,
-        last : 0,
-        frame : 0,
+        dt: 0,
+        last: 0,
+        frame: 0,
         fps: 0
     };
 
-    keys : IKeyPress = {
+    keys: IKeyPress = {
         UP: false,
         DOWN: false,
         LEFT: false,
         RIGHT: false
     };
 
-    player : THREE.Object3D; // 3D model of the player
-    light : THREE.Light;
-    pointLight : THREE.Light;
-    skyBox : THREE.Object3D;
+    player: THREE.Object3D; // 3D model of the player
+    light: THREE.Light;
+    pointLight: THREE.Light;
+    skyBox: THREE.Object3D;
     level: THREE.Object3D;
 
     state = {
-        dead : false
+        dead: false
     };
 
-    currentPlayer : IPlayerObject; // is the object of the player state
-    connectedPlayers : IPlayerObject[] = [];
+    currentPlayer: IPlayerObject; // is the object of the player state
+    connectedPlayers: IPlayerObject[] = [];
 
     scene: any = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 1280 / 720, 1, 200000);
@@ -69,7 +69,7 @@ export class GameComponent {
 
     //setup webSocket service;
     private _socketService: WebSocketService = new WebSocketService();
-    private _animationService : AnimationService = new AnimationService();
+    private _animationService: AnimationService = new AnimationService();
 
     constructor(private _updateService: UpdateService,
                 private _lightService: LightService,
@@ -98,11 +98,11 @@ export class GameComponent {
         this.keys = this._keyService.onKeyPress(event, false);
     }
 
-    handleClickEvents(event : any, mouseDown : boolean){
+    handleClickEvents(event: any, mouseDown: boolean) {
         this.keys = this._keyService.onClickEvent(event, mouseDown);
     }
 
-    handleMouseMovement(event : any){
+    handleMouseMovement(event: any) {
         this.keys = this._keyService.onMouseMovement(event);
     }
 
@@ -110,10 +110,10 @@ export class GameComponent {
     //on component load
     //***********************
 
-    connection : Subscription;
-    newPlayerConnect : Subscription;
-    animateSubscription : Subscription;
-    onPlayerdisconnect : Subscription;
+    connection: Subscription;
+    newPlayerConnect: Subscription;
+    animateSubscription: Subscription;
+    onPlayerdisconnect: Subscription;
 
 
     ngOnInit() {
@@ -123,7 +123,7 @@ export class GameComponent {
 
         //connect to game and load level:
         this._socketService.connectToGame(this.currentPlayer, this._apiService.getToken())
-            .then((res : any) => {
+            .then((res: any) => {
                 this.connectedPlayers = res.playerList;
                 this.currentPlayer.ID = res.ID;
                 if (this.connectedPlayers.length > 0) {
@@ -134,28 +134,28 @@ export class GameComponent {
                     this.loadCurrentGame()
                 }
             })
-            .catch((err : any) => {
-            console.log('starting a offline game');
-            this.loadCurrentGame();
+            .catch((err: any) => {
+                console.log('starting a offline game');
+                this.loadCurrentGame();
             })
     }
 
     setupCurrentPlayer() {
         this.currentPlayer = {
-            ID : 'NULL',
-            position :{
+            ID: 'NULL',
+            position: {
                 x: 0,
                 y: 0,
                 z: 0
             },
-            rotation :{
+            rotation: {
                 x: 0,
                 y: 0,
                 z: 0
             },
             acceleration: 0,
-            name : "test2",
-            bike : this._player.getBike()
+            name: "test2",
+            bike: this._player.getBike()
         };
     }
 
@@ -201,8 +201,8 @@ export class GameComponent {
             }
         );
 
-        const level = require("../../../assets/objects/lennart_level_06.obj");
-        const levelText = require("../../../assets/textures/tron-02.jpg");
+        const level = "../../assets/objects/lennart_level_06.obj";
+        const levelText = "../../assets/textures/tron-02.jpg";
         this._loader.loadOBJ(level, levelText, "level").then(
             (res: THREE.Object3D) => {
                 res.name = "model";
@@ -221,7 +221,7 @@ export class GameComponent {
     }
 
     //handles async loading on components
-    handleLoaded(loadType : string) {
+    handleLoaded(loadType: string) {
         this.loaded[loadType] = true;
         let ready = true;
 
@@ -271,21 +271,21 @@ export class GameComponent {
 
     addObjectsToScene() {
         this.player.position.y = 100;
-        this.scene.add( this.player );
-        this.scene.add( this.level );
-        this.scene.add( this.light );
-        this.scene.add( this.pointLight );
-        this.scene.add( this.skyBox );
+        this.scene.add(this.player);
+        this.scene.add(this.level);
+        this.scene.add(this.light);
+        this.scene.add(this.pointLight);
+        this.scene.add(this.skyBox);
     }
 
     addBoundingBoxesToScene() {
-        const geometry2 = new THREE.BoxGeometry( 60000, 1, 60000 );
+        const geometry2 = new THREE.BoxGeometry(60000, 1, 60000);
         const material2 = new THREE.MeshBasicMaterial();
         material2.visible = false;
-        const cube2 = new THREE.Mesh( geometry2, material2 );
+        const cube2 = new THREE.Mesh(geometry2, material2);
         cube2.position.y = -8000;
         cube2.name = "death";
-        this.scene.add( cube2 );
+        this.scene.add(cube2);
     }
 
     //***********************
@@ -293,7 +293,7 @@ export class GameComponent {
     //***********************
 
     render() {
-        const obj : IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.camera);
+        const obj: IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.camera);
         this._updateService.update(this.player, this.camera, this.currentPlayer, this.keys, this.general.dt, obj);
 
         this.checkState(obj.d);
@@ -312,7 +312,7 @@ export class GameComponent {
         this.renderer.render(this.scene, this.camera);
     }
 
-    checkState(death : boolean) {
+    checkState(death: boolean) {
         if (death) {
             this._animationService.stopAnimation();
             this.state.dead = true;

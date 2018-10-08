@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import {Injectable} from "@angular/core";
 
 @Injectable()
@@ -9,13 +10,14 @@ export class SkyBoxService {
         const loader = new THREE.TextureLoader();
         return new Promise(
             (resolve, reject) => {
-                loader.load(require("../../../assets/textures/skySphere_2.jpg"),
-                    (texture : any) => {
+                loader.load(
+                    "../../assets/textures/skySphere_2.jpg",
+                    (texture: any) => {
                         const material = new THREE.MeshPhongMaterial({
                             map: texture,
                         });
                         const sky = new THREE.Mesh(skyGeo, material);
-                        sky.material.side = THREE.BackSide;
+                        // sky.material.side = THREE.BackSide;
                         resolve(sky)
                     });
             })
