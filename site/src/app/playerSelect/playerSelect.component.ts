@@ -152,8 +152,8 @@ export class PlayerSelectComponent {
 
     //handles async loading on components
     handleLoaded(loadType: string) {
-        this.setup();
-git
+        //this.setup();
+
         this.loaded[loadType] = true;
         let ready = true;
 
