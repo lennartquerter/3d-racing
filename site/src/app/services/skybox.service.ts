@@ -10,15 +10,19 @@ export class SkyBoxService {
         const loader = new THREE.TextureLoader();
         return new Promise(
             (resolve, reject) => {
+                console.log("start skybox");
                 loader.load(
                     "../../assets/textures/skySphere_2.jpg",
-                    (texture: any) => {
+                    (texture) => {
                         const material = new THREE.MeshPhongMaterial({
                             map: texture,
                         });
+
+                        material.side = THREE.BackSide;
                         const sky = new THREE.Mesh(skyGeo, material);
-                        // sky.material.side = THREE.BackSide;
                         resolve(sky)
+                    }, (prog) => {
+                        console.log("progress")
                     });
             })
     }

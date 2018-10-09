@@ -140,7 +140,8 @@ export class PlayerSelectComponent {
             );
         }
 
-        this._skyBoxService.init().then(
+        this._skyBoxService.init()
+            .then(
             (res: THREE.Object3D) => {
                 res.name = "skyBox";
                 this.skyBox = res;
@@ -151,6 +152,8 @@ export class PlayerSelectComponent {
 
     //handles async loading on components
     handleLoaded(loadType: string) {
+        this.setup();
+git
         this.loaded[loadType] = true;
         let ready = true;
 
