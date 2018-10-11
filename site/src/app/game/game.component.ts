@@ -1,6 +1,6 @@
 import {Component, ViewChild, ElementRef, HostListener} from '@angular/core';
 import {UpdateService} from "../services/update.service";
-import {IKeyPress, IGravityCheckReturn, IPlayerObject} from "../interface";
+import {IKeyPress, IPlayerObject} from "../interface";
 import {LightService} from "../services/light.service";
 import {SkyBoxService} from "../services/skybox.service";
 import {LoaderService} from "../services/loader.service";
@@ -26,12 +26,6 @@ export class GameComponent {
         gravity: 0,
         lapTime: 0
         // bestLap : 100,
-    };
-
-    loaded = {
-        level: false,
-        user: false,
-        skybox: false,
     };
 
     general = {
@@ -85,7 +79,7 @@ export class GameComponent {
         this.setupCurrentPlayer();
         this._updateService.init(this.currentPlayer.bike);
 
-        //connect to game and load level:
+        // connect to game and load level
         this._socketService
             .connectToGame(this.currentPlayer, this._apiService.getToken())
             .then((res: any) => {
@@ -194,13 +188,14 @@ export class GameComponent {
                 player.name = "player";
                 this.player = player;
 
-                this._skyBoxService.init()
+                this._skyBoxService.init("skySphere_5.jpg")
                     .then((skybox: THREE.Object3D) => {
                         skybox.name = "skyBox";
                         this.skyBox = skybox;
 
-                        const level = "../../assets/objects/lennart_level_06.obj";
-                        const levelText = "../../assets/textures/tron-02.jpg";
+                        const level = "assets/objects/lennart_level_06.obj";
+                        const levelText = "assets/textures/tron.png";
+
                         this._loader.loadOBJ(level, levelText, "level")
                             .then((level: THREE.Object3D) => {
                                 level.name = "model";
@@ -258,10 +253,13 @@ export class GameComponent {
     addBoundingBoxesToScene() {
         const geometry2 = new THREE.BoxGeometry(60000, 1, 60000);
         const material2 = new THREE.MeshBasicMaterial();
+
         material2.visible = false;
         const cube2 = new THREE.Mesh(geometry2, material2);
+
         cube2.position.y = -8000;
         cube2.name = "death";
+
         this.scene.add(cube2);
     }
 
@@ -270,11 +268,17 @@ export class GameComponent {
     //***********************
 
     render() {
-        const obj: IGravityCheckReturn = this._physicsService.GravityCheck(this.player, this.camera);
-        this._updateService.update(this.player, this.camera, this.currentPlayer, this.keys, this.general.dt, obj);
+        const physics = this._physicsService.GravityCheck(this.player, this.camera);
 
-        this.checkState(obj.d);
-        this.gui.lapTime = obj.lt;
+        if (physics.death) {
+            this._animationService.stopAnimation();
+            this.state.dead = true;
+            return;
+        }
+
+        this._updateService.update(this.player, this.camera, this.currentPlayer, this.keys, this.general.dt, physics.gravity);
+
+        this.gui.lapTime = physics.lap;
 
         if (this.general.frame % 4 == 0 && this._socketService.socket.connected) {
             this._multiplayerService.SendPlayerUpdate(this.player, this.currentPlayer, this.connectedPlayers);
@@ -282,17 +286,12 @@ export class GameComponent {
             this._multiplayerService.RenderOtherPlayersPosition(this.general.dt, this.connectedPlayers)
         }
 
+        this.gui.gravity = physics.gravity;
 
-        this.gui.gravity = obj.g;
-        //keep skyBox around bike
+        // keep skyBox around bike
         this.skyBox.position.copy(this.player.position);
-        this.renderer.render(this.scene, this.camera);
-    }
 
-    checkState(death: boolean) {
-        if (death) {
-            this._animationService.stopAnimation();
-            this.state.dead = true;
-        }
+        // render scene
+        this.renderer.render(this.scene, this.camera);
     }
 }

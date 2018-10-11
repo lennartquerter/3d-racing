@@ -20,7 +20,7 @@ export class UpdateService {
         forward: 7,
         ultamateforward: 10,
         backwards: -1.4,
-        handeling : 0.04
+        handeling: 0.04
     };
 
 
@@ -47,7 +47,7 @@ export class UpdateService {
         this.acceleration = 0;
     }
 
-    public update(car: any, camera: any, currentPlayer: IPlayerObject, keys: IKeyPress, dt: number, drag: IGravityCheckReturn) {
+    public update(car: any, camera: any, currentPlayer: IPlayerObject, keys: IKeyPress, dt: number, drag: number) {
         const step = dt * this.generalCarSpeedMultiplier;
         this.direction = {
             X: 0,
@@ -55,9 +55,9 @@ export class UpdateService {
             Y: 0,
         };
 
-        if (drag.g > 1 && currentPlayer.acceleration > 0 ) {
+        if (drag > 1 && currentPlayer.acceleration > 0) {
             currentPlayer.acceleration -= this.accelerationLevels.level3;
-        } else if (drag.g < -1) {
+        } else if (drag < -1) {
             currentPlayer.acceleration += this.accelerationLevels.afterMaxSpeed;
         }
 
@@ -104,7 +104,7 @@ export class UpdateService {
         if (parseInt(Math.cos(car.rotation.z).toFixed(0)) > -1) {
             this.direction.Z = step * currentPlayer.acceleration * Math.cos(car.rotation.y);
         } else {
-            this.direction.Z = step * currentPlayer.acceleration * - Math.cos(car.rotation.y);
+            this.direction.Z = step * currentPlayer.acceleration * -Math.cos(car.rotation.y);
         }
 
         this.direction.X = step * currentPlayer.acceleration * Math.sin(car.rotation.y);

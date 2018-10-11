@@ -67,7 +67,9 @@ export class PhysicsService {
         const playerBB = new THREE.Box3().setFromObject(player);
 
         if (playerBB.min.y < this.deathBB.max.y) {
-            return {d: true, g: 0, lt: 0}
+            return {
+                death: true,
+            }
         }
 
         const obj = this.checkForCollision(player);
@@ -90,7 +92,11 @@ export class PhysicsService {
             camera.rotateX(0.01)
         }
 
-        return {d: false, g: 0, lt: 0}
+        return {
+            death: false,
+            lap: 0,
+            gravity: distanceFromRoad
+        }
     }
 
     checkForCollision(player: THREE.Object3D): any {

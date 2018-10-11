@@ -6,7 +6,6 @@ export class PlayerService {
     bike: IBike;
     user: IUser = null;
 
-
     setChosenBike(b: IBike) {
         this.bike = b;
     }

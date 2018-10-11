@@ -47,8 +47,8 @@ export class PlayerSelectComponent {
             Bike: "../../assets/objects/bike_2.obj",
             Name: 'bike-01',
             Stats: {
-                Acceleration: 700,
-                MaxSpeed: 1000,
+                Acceleration: 400,
+                MaxSpeed: 700,
                 Shield: 500,
                 ShieldRechargeRate: 100,
                 Handeling: 0.034
@@ -59,8 +59,8 @@ export class PlayerSelectComponent {
             Bike: "../../../assets/objects/bike_2.obj",
             Name: 'bike-02',
             Stats: {
-                Acceleration: 800,
-                MaxSpeed: 900,
+                Acceleration: 500,
+                MaxSpeed: 600,
                 Shield: 400,
                 ShieldRechargeRate: 130,
                 Handeling: 0.042
@@ -71,8 +71,8 @@ export class PlayerSelectComponent {
             Bike: "../../../assets/objects/bike_2.obj",
             Name: 'bike-03',
             Stats: {
-                Acceleration: 500,
-                MaxSpeed: 1200,
+                Acceleration: 300,
+                MaxSpeed: 700,
                 Shield: 300,
                 ShieldRechargeRate: 180,
                 Handeling: 0.038
@@ -127,7 +127,7 @@ export class PlayerSelectComponent {
     loader() {
         this.light = this._lightService.addSoftAmbientLight();
 
-        this._skyBoxService.init()
+        this._skyBoxService.init("skySphere_5.jpg")
             .then((res: THREE.Object3D) => {
                 res.name = "skyBox";
                 this.skyBox = res;
