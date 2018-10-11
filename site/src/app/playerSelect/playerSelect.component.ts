@@ -112,58 +112,41 @@ export class PlayerSelectComponent {
         private _player: PlayerService,
         private _router: Router
     ) {
-    }
-
-    ngOnInit() {
         this.loader();
-        for (let x in this.loaderList) {
-            this.loaded[this.loaderList[x].Name] = false;
+        for (let x of this.loaderList) {
+            this.loaded[x.Name] = false;
         }
 
         this.animateSubscription = this._animationService.animation().subscribe((generalObject: IGeneralObject) => {
             this.general = generalObject;
             this.render();
         });
-    }
 
+    }
 
     loader() {
         this.light = this._lightService.addSoftAmbientLight();
 
-        for (let x in this.loaderList) {
-            this.pointLightList.push(this._lightService.createSpotLight(0xddbfbf));
-            this._loader.loadOBJ(this.loaderList[x].Bike, this.loaderList[x].Texture, this.loaderList[x].Name).then(
-                (res: THREE.Object3D) => {
-                    this.bikeList.push(res);
-                    this.handleLoaded(res.name);
-                }
-            );
-        }
-
         this._skyBoxService.init()
-            .then(
-            (res: THREE.Object3D) => {
+            .then((res: THREE.Object3D) => {
                 res.name = "skyBox";
                 this.skyBox = res;
-                this.handleLoaded("skybox");
-            }
-        );
+
+                let promiseList = [];
+
+                for (let x of this.loaderList) {
+                    this.pointLightList.push(this._lightService.createSpotLight(0xddbfbf));
+                    promiseList.push(this._loader.loadOBJ(x.Bike, x.Texture, x.Name))
+                }
+
+                Promise.all(promiseList)
+                    .then((result: THREE.Object3D[]) => {
+                        this.bikeList.push(...result);
+                        this.setup();
+                    });
+            });
     }
 
-    //handles async loading on components
-    handleLoaded(loadType: string) {
-        //this.setup();
-
-        this.loaded[loadType] = true;
-        let ready = true;
-
-        for (let x in this.loaded) {
-            if (!this.loaded[x]) ready = false;
-        }
-        if (ready) {
-            this.setup();
-        }
-    }
 
     setup() {
 

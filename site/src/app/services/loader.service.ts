@@ -36,8 +36,7 @@ export class LoaderService {
 
                     textureLoader.load(textureFile, (texture) => {
                         var material = new THREE.MeshBasicMaterial({map: texture});
-
-                        resolve(group);
+                        return resolve(group);
                     })
 
 

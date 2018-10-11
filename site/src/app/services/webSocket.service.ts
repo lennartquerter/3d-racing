@@ -3,15 +3,15 @@ import {Injectable} from "@angular/core";
 import {IPlayerObject} from "../interface";
 import * as io from "socket.io-client";
 
+
+
 @Injectable()
 export class WebSocketService {
     socket: any;
 
     constructor() {
-        // this.socket = io.connect('localhost:9900');
-    }
+        this.socket = io.connect('localhost:9900');
 
-    ngOnInit() {
         this.socket.on('connect_error', function () {
             console.log('Connection failed');
         });
@@ -79,9 +79,11 @@ export class WebSocketService {
         console.log(data);
 
         return new Promise((resolve, reject) => {
-            this.socket.emit('gameConnect', data, (data: any) => {
-                resolve(data);
-            })
+            return reject(data);
+
+            // this.socket.emit('gameConnect', data, (data: any) => {
+            //     resolve(data);
+            // })
         })
     }
 }

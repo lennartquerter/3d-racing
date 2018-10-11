@@ -3,21 +3,25 @@ import {Injectable} from "@angular/core";
 
 import * as THREE from 'three'
 import * as moment from 'moment';
+import {Object3D} from "three";
 
 @Injectable()
 
 export class PhysicsService {
 
-    groundList: THREE.Box3[] = [];
     deathBB: THREE.Box3;
-    level: THREE.Mesh;
+    level: THREE.Object3D;
     startLine: THREE.Mesh;
     startTime: moment.Moment;
 
-    collidableMeshList: THREE.Mesh[] = [];
+    caster: THREE.Raycaster = new THREE.Raycaster();
+
+    previousOutcome: number = 0;
+    fallAcceleration: number = 7.8 * 100000000;
+    lookForwardDistance: number = 512;
 
     rays: THREE.Vector3[] = [
-        new THREE.Vector3(0, 0, 1),     //0: forward,
+        new THREE.Vector3(0, 0, 1),     //0 : forward,
         new THREE.Vector3(0, 0, -1),    //1 : backwards
 
         new THREE.Vector3(1, 0, 0),     //2 : left
@@ -28,7 +32,7 @@ export class PhysicsService {
         new THREE.Vector3(-1, 0, 1),    //6 : forwards right
         new THREE.Vector3(-1, 0, -1),   //7 : backwards right
 
-        new THREE.Vector3(0, 1, 0),     //8: above
+        new THREE.Vector3(0, 1, 0),     //8 : above
         new THREE.Vector3(0, 1, 1),     //9 : above - forward
         new THREE.Vector3(0, 1, -1),    //10 : above - backward
         new THREE.Vector3(1, 1, 0),     //11 : above - left
@@ -38,130 +42,117 @@ export class PhysicsService {
         new THREE.Vector3(0, -1, 1),    //14 : below - forward
         new THREE.Vector3(0, -1, -1),   //15 : below - backward
         new THREE.Vector3(-1, -1, 0),   //16 : below - right
-        new THREE.Vector3(1, -1, 0),   //17 : below - left
+        new THREE.Vector3(1, -1, 0),    //17 : below - left
 
         new THREE.Vector3(0, 0, 0)      //18 : none
     ];
 
 
-    caster: THREE.Raycaster = new THREE.Raycaster();
-
-    distanceAbove: number = 0;
-    distanceBelow: number = 0;
-
-    fallTime: number = 1;
-
-
-    intersect: boolean = false;
-
-
     setupGravity(scene: THREE.Scene) {
         this.startTime = moment();
-        for (let x in scene.children) {
-            if (scene.children[x].name == 'model') {
-                const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-                // this.level = new THREE.Mesh(scene.children[x].children[0].geometry, material);
-                this.level.position.y = 0;
-                // scene.add(this.level);
-                // console.log(this.level);
-                this.collidableMeshList.push(this.level);
 
-            }
-            if (scene.children[x].name == 'death') {
-                this.deathBB = new THREE.Box3().setFromObject(scene.children[x]);
-            }
-        }
+        this.level = scene.getObjectByName('model').children[0];
 
-        const geometry = new THREE.BoxGeometry(2500, 2500, 1);
+        this.deathBB = new THREE.Box3().setFromObject(scene.getObjectByName('death'));
+
         const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+        const geometry = new THREE.BoxGeometry(2500, 2500, 1);
+
         this.startLine = new THREE.Mesh(geometry, material);
         this.startLine.position.z = 1250;
-        // scene.add( this.startLine );
+        scene.add(this.startLine);
     }
-
-    previousOutcome: number = 0;
-    fallAcceleration: number = 7.8;
 
     GravityCheck(player: THREE.Object3D, camera: THREE.Camera): IGravityCheckReturn {
         const playerBB = new THREE.Box3().setFromObject(player);
-        let death = (playerBB.min.y < this.deathBB.max.y);
-        const laptime = this.checkForCollision(player);
-        let outcome = 0;
 
-        this.distanceAbove = parseFloat(this.distanceAbove.toFixed(2));
-        this.distanceBelow = parseFloat(this.distanceBelow.toFixed(2));
-
-        //check for distance between the road and object
-        if (!this.intersect) {
-            outcome -= ((this.fallAcceleration * 100000000) / Math.pow((player.position.y - this.deathBB.min.y), 2));
-            console.log('!intersect');
+        if (playerBB.min.y < this.deathBB.max.y) {
+            return {d: true, g: 0, lt: 0}
         }
 
-        // console.log(this.distanceBelow);
+        const obj = this.checkForCollision(player);
 
-        if (this.distanceAbove > 2) {
-            console.log('above:' + this.distanceAbove);
-            outcome += this.distanceAbove;
-            // } else if (this.distanceAbove > 3) {
-            //     outcome += 2;
-            // }
+        let distanceFromRoad = obj.distance;
+        let falling = obj.falling;
+
+        if (falling) {
+            distanceFromRoad = -((this.fallAcceleration / Math.pow((player.position.y - this.deathBB.min.y), 2)).toFixed(2));
         }
 
-        if (this.distanceBelow > 2) {
-            outcome -= this.distanceBelow / 2;
-        }
-        //check for cheats
-        if (player.position.y > 5000) {
-            outcome = -15000;
+        if (distanceFromRoad > 10 || distanceFromRoad < 0) {
+            player.position.y += distanceFromRoad;
         }
 
-        //change cam dir when going up or down
+        // change cam dir when going up or down
         if (this.previousOutcome - player.position.y > 2) {
             camera.rotateX(-0.01)
         } else if (this.previousOutcome - player.position.y < -2) {
             camera.rotateX(0.01)
         }
 
-        this.previousOutcome = player.position.y;
-        //do not go up and down on small changes
-        if (outcome < 1 && outcome > -1) {
-            outcome = 0;
-        }
-        player.position.y += outcome;
-
-        return {d: death, g: outcome, lt: laptime}
+        return {d: false, g: 0, lt: 0}
     }
 
-    checkForCollision(player: THREE.Object3D) {
-        const distance = 128;
+    checkForCollision(player: THREE.Object3D): any {
         let collisions: any;
         let i: number;
-        let startCollisions: any;
 
-        this.intersect = false;
+        let dist: number = 0;
+        var falling = true;
+
 
         for (i = 0; i < this.rays.length; i += 1) {
+
             this.caster.set(player.position, this.rays[i]);
-            collisions = this.caster.intersectObjects(this.collidableMeshList);
-            if (collisions.length > 0 && collisions[0].distance <= distance) {
-                if (i == 8) {
-                    this.intersect = true;
-                    this.distanceAbove = collisions[0].distance;
-                }
-                if (i == 13) {
-                    this.intersect = true;
-                    this.distanceBelow = collisions[0].distance;
+
+            collisions = this.caster.intersectObject(this.level);
+
+            if (collisions.length > 0 && collisions[0].distance <= this.lookForwardDistance) {
+
+                switch (i) {
+                    // above
+                    case 8:
+                        dist = collisions[0].distance;
+                        falling = false;
+                        break;
+                    // below
+                    case 13:
+                        dist = -collisions[0].distance;
+                        falling = false;
+                        break;
+                    // front of player
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                        dist += collisions[0].distance;
+                        falling = false;
+                        break;
+
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                        break;
+
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                        break;
+                    default:
+                        console.log("ray: " + i);
+                        break;
                 }
             }
         }
-        this.caster.set(player.position, this.rays[0]);
-        startCollisions = this.caster.intersectObject(this.startLine);
-        if (startCollisions.length > 0 && startCollisions[0].distance <= distance) {
-            this.startTime = moment();
-
-        }
-        const afterLap = moment();
-        return moment.utc(moment(afterLap, "DD/MM/YYYY HH:mm:ss").diff(moment(this.startTime, "DD/MM/YYYY HH:mm:ss"))).seconds();
-
+        return {
+            distance: parseFloat(dist.toFixed(2)),
+            falling: falling
+        };
     }
 }

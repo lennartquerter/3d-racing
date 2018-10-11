@@ -81,7 +81,28 @@ export class GameComponent {
                 private _skyBoxService: SkyBoxService,
                 private _apiService: ApiService
     ) {
+        this.setupSubscriptions();
+        this.setupCurrentPlayer();
+        this._updateService.init(this.currentPlayer.bike);
 
+        //connect to game and load level:
+        this._socketService
+            .connectToGame(this.currentPlayer, this._apiService.getToken())
+            .then((res: any) => {
+                this.connectedPlayers = res.playerList;
+                this.currentPlayer.ID = res.ID;
+                if (this.connectedPlayers.length > 0) {
+                    console.log('there are other players in scene');
+                    this._multiplayerService.initializePlayers(this.scene, this.connectedPlayers)
+                        .then(() => this.loadCurrentGame())
+                } else {
+                    this.loadCurrentGame()
+                }
+            })
+            .catch((err: any) => {
+                console.log('starting a offline game');
+                this.loadCurrentGame();
+            })
     }
 
     //***********************
@@ -114,31 +135,6 @@ export class GameComponent {
     newPlayerConnect: Subscription;
     animateSubscription: Subscription;
     onPlayerdisconnect: Subscription;
-
-
-    ngOnInit() {
-        this.setupSubscriptions();
-        this.setupCurrentPlayer();
-        this._updateService.init(this.currentPlayer.bike);
-
-        //connect to game and load level:
-        this._socketService.connectToGame(this.currentPlayer, this._apiService.getToken())
-            .then((res: any) => {
-                this.connectedPlayers = res.playerList;
-                this.currentPlayer.ID = res.ID;
-                if (this.connectedPlayers.length > 0) {
-                    console.log('there are other players in scene');
-                    this._multiplayerService.initializePlayers(this.scene, this.connectedPlayers)
-                        .then(() => this.loadCurrentGame())
-                } else {
-                    this.loadCurrentGame()
-                }
-            })
-            .catch((err: any) => {
-                console.log('starting a offline game');
-                this.loadCurrentGame();
-            })
-    }
 
     setupCurrentPlayer() {
         this.currentPlayer = {
@@ -193,45 +189,26 @@ export class GameComponent {
         this.light = this._lightService.addAmbientLight(0xddbfbf);
         this.pointLight = this._lightService.addPointLight();
 
-        this._loader.loadOBJ(this.currentPlayer.bike.Bike, this.currentPlayer.bike.Texture, "bike").then(
-            (res: THREE.Object3D) => {
-                res.name = "player";
-                this.player = res;
-                this.handleLoaded("user");
-            }
-        );
+        this._loader.loadOBJ(this.currentPlayer.bike.Bike, this.currentPlayer.bike.Texture, "bike")
+            .then((player: THREE.Object3D) => {
+                player.name = "player";
+                this.player = player;
 
-        const level = "../../assets/objects/lennart_level_06.obj";
-        const levelText = "../../assets/textures/tron-02.jpg";
-        this._loader.loadOBJ(level, levelText, "level").then(
-            (res: THREE.Object3D) => {
-                res.name = "model";
-                this.level = res;
-                this.handleLoaded("level");
-            }
-        );
+                this._skyBoxService.init()
+                    .then((skybox: THREE.Object3D) => {
+                        skybox.name = "skyBox";
+                        this.skyBox = skybox;
 
-        this._skyBoxService.init().then(
-            (res: THREE.Object3D) => {
-                res.name = "skyBox";
-                this.skyBox = res;
-                this.handleLoaded("skybox");
-            }
-        );
-    }
-
-    //handles async loading on components
-    handleLoaded(loadType: string) {
-        this.loaded[loadType] = true;
-        let ready = true;
-
-        for (let x in this.loaded) {
-            if (!this.loaded[x]) ready = false;
-        }
-        if (ready) {
-            console.log("loaded");
-            this.setup();
-        }
+                        const level = "../../assets/objects/lennart_level_06.obj";
+                        const levelText = "../../assets/textures/tron-02.jpg";
+                        this._loader.loadOBJ(level, levelText, "level")
+                            .then((level: THREE.Object3D) => {
+                                level.name = "model";
+                                this.level = level;
+                                this.setup();
+                            });
+                    });
+            });
     }
 
     reloadGame() {
